@@ -22,7 +22,7 @@ npm -v
 ## Setup
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/eukarya-inc/foss4g-2026-reearth-cms-workshop-sample-code
 cd foss4g-2026-reearth-cms-workshop-sample-code
 npm install
 ```
