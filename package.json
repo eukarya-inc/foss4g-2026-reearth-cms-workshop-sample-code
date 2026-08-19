@@ -1,13 +1,15 @@
 {
-  "name": "foss4g-2026-reearth-cms-frontend-sample-code",
+  "name": "foss4g-2026-reearth-cms-workshop-sample-code",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite workspace",
-    "build": "vite build workspace",
-    "preview": "vite preview workspace",
-    "step": "vite"
+    "dev:web": "vite frontend/workspace",
+    "dev:api": "node --watch backend/workspace/src/main.js",
+    "build:web": "vite build frontend/workspace",
+    "preview:web": "vite preview frontend/workspace",
+    "step:web": "vite",
+    "step:api": "node --watch"
   },
   "devDependencies": {
     "vite": "8.2.1"
