@@ -1,0 +1,15 @@
+{
+  "name": "foss4g-2026-reearth-cms-frontend-sample-code",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite workspace",
+    "build": "vite build workspace",
+    "preview": "vite preview workspace",
+    "step": "vite"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}
