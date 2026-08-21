@@ -12,16 +12,24 @@ Living document. Sections marked **TBD** are still open.
 | Duration                    | TBD                             |
 | Prerequisites for attendees | Basic HTML / CSS / JavaScript   |
 
-## Sample app scope — TBD
+## Sample app scope
 
-Not decided yet. Candidates discussed so far:
+**A citizen hazard-report map for Kobe** — read *and* write. Ported from the
+internal `kobe-map-server` demo, whose frontend was one 2200-line `index.html`.
 
-1. **Fetch & render CMS items** — call the Re:Earth CMS public API and render items as a list or cards. Pure `fetch` + DOM, no map.
-2. **CMS items on a map** — same fetch, but render items with geometry on a map (MapLibre or Cesium). Heavier, but a better fit for a FOSS4G audience.
+- Leaflet map (GSI pale tiles) with one marker per report, keyed by category.
+- A form that posts a new report: category, a location picked by clicking the
+  map, title, description, up to four photos.
+- A list tab with category filters, a detail modal, and a stats panel.
+- Demo data when the CMS is unreachable, so the sample runs offline.
 
-Decide this before writing any step beyond `01`.
+The finished app lives in `frontend/steps/final`. Steps `02`…`NN` get derived
+from it by working backwards.
 
-The backend's role is also open beyond the step 01 ping check — see *Open questions*.
+The backend keeps its single role: an auth injector. The frontend calls the CMS
+endpoints directly through it, so the integration token never reaches the
+browser. Workspace / project / model ids do sit in the frontend — they are not
+secrets, and saying so is part of the workshop.
 
 ## Steps
 
@@ -31,6 +39,7 @@ The backend's role is also open beyond the step 01 ping check — see *Open ques
 | 02   | —                         | —                        | TBD                                                                  |
 | 03   | —                         | —                        | TBD                                                                  |
 | …    | —                         | —                        | TBD                                                                  |
+| —    | `frontend/steps/final`    | `backend/server.js`      | The finished app. Not a step of its own — the target the steps build toward |
 
 Attendees code in `frontend/workspace/`; each `steps/NN-*` folder is an
 independently runnable snapshot they can jump to if they fall behind.
@@ -54,19 +63,27 @@ needs both sides.
 | Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's | Keeps the "no `vite.config.js`" decision — no dev proxy needed                                         |
 | Running both          | Two terminals (`dev:web`, `dev:api`)                                                   | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency |
 | Language              | Plain JavaScript                                                                       | Keeps the workshop about the content, not the toolchain                                               |
+| Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too |
+| Map library           | Leaflet 1.9 via the unpkg CDN                                                          | Smaller and simpler to read aloud than MapLibre; keeps `package.json` free of frontend runtime deps   |
 | Config                | No `vite.config.js`                                                                    | Nothing to explain                                                                                    |
 
 Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks.
 
 ## Open questions
 
-- [ ] What does the sample app do? (see *Sample app scope*)
-- [ ] What does the backend do beyond the step 01 ping check — CMS proxy that hides the API token, offline fallback data, a write path? Tied to the API key question below.
-- [ ] Which Re:Earth CMS instance and project do attendees use? Is an API key or token needed?
+- [x] What does the sample app do? — see *Sample app scope*.
+- [x] What does the backend do beyond the step 01 ping check? — nothing more. It
+      stays an auth injector; the frontend calls CMS endpoints through it.
+- [x] Language of the workshop and of the code comments — English.
+- [x] Is offline fallback data needed in case venue Wi-Fi fails? — yes. A failed
+      read falls back to seven demo reports and the header badge flips to
+      "Demo mode".
+- [x] Do we need to answer CORS preflights locally? — yes. The item POST sends
+      `Content-Type: application/json`, so `backend/server.js` now answers
+      `OPTIONS` itself instead of forwarding it upstream.
+- [ ] Which Re:Earth CMS project do attendees use? `frontend/steps/final/src/config.js`
+      reads from `eukarya/kobe-demo/hazard_reports`, but the workspace, project
+      and model **ids** needed for writing are still placeholders.
 - [ ] How many steps, and how long is each?
-- [ ] Language of the workshop and of the code comments (English / Japanese)?
-- [ ] Is offline fallback data needed in case venue Wi-Fi fails?
-- [ ] Do we need to answer CORS preflights locally? `Access-Control-Allow-Origin: *`
-      is injected, which covers plain `GET`s, but an `OPTIONS` preflight is still
-      forwarded upstream. Only matters if a step sends a JSON body or a custom
-      header from the browser.
+- [ ] Does the demo model's schema match the field keys and types in
+      `toApiFields()` (`cms.js`)? Untested against a live project.

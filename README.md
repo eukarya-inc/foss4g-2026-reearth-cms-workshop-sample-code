@@ -97,6 +97,18 @@ frontend/<folder>/
    └─ style.css    styles
 ```
 
+`frontend/steps/final` is the finished app — the Kobe citizen hazard-report map.
+It splits its JavaScript across several files in `src/` and pulls Tailwind and
+Leaflet from a CDN, so there is still nothing to install and no `style.css`:
+
+```bash
+npm run step:web -- frontend/steps/final
+```
+
+To submit reports from it, fill in the workspace, project and model ids at the
+top of `frontend/steps/final/src/config.js`. Reading needs no ids — and if the
+CMS is unreachable, the app falls back to demo data and says so in the header.
+
 The backend is a single file today — it has no `workspace/` or `steps/` folders.
 If backend steps are added later, they will mirror the frontend numbering.
 
@@ -134,9 +146,11 @@ replacing whatever the upstream sent. That is what lets the frontend on port
 5173 call it directly with `fetch`, and why the repo needs no `vite.config.js`
 dev proxy.
 
-Preflights are not answered locally — an `OPTIONS` request is forwarded upstream
-like any other. Plain `GET`s from the browser send no custom headers, since the
-token is attached server-side, so they never trigger one.
+`OPTIONS` is the one method the proxy answers itself, with a `204` and the
+`Allow-Methods` / `Allow-Headers` a preflight needs. Everything else is
+forwarded. Plain `GET`s never trigger a preflight, but posting a JSON body does,
+and the upstream does not reply to those preflights in a way the browser
+accepts.
 
 ## Workshop links
 

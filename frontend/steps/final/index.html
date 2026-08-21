@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kobe Hazard Map — Re:Earth CMS</title>
+
+    <!-- Leaflet and Tailwind both come from a CDN, so the repo keeps zero
+         frontend runtime dependencies. Leaflet is a classic script, so `L` is a
+         global by the time the deferred module in src/ runs. -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body class="overflow-hidden bg-slate-50 text-slate-900">
+    <header
+      class="fixed inset-x-0 top-0 z-[1000] flex h-16 items-center justify-between border-b border-white/10 bg-slate-900/95 px-6 backdrop-blur"
+    >
+      <div class="flex items-center gap-3">
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-sky-800 to-emerald-700 text-lg font-black text-white"
+        >
+          K
+        </div>
+        <div>
+          <div class="font-bold text-white">Kobe Citizen Hazard Map</div>
+          <div class="text-[11px] text-white/60">Re:Earth CMS demo</div>
+        </div>
+      </div>
+
+      <div
+        id="connection"
+        class="flex items-center gap-2 rounded-full border border-white/20 px-3.5 py-1.5 text-xs text-white/60"
+      >
+        <span class="h-2 w-2 animate-pulse rounded-full bg-white/60"></span>
+        <span>Connecting…</span>
+      </div>
+    </header>
+
+    <div class="mt-16 flex h-[calc(100vh-4rem)]">
+      <aside
+        class="flex w-[420px] shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white"
+      >
+        <div class="flex border-b border-slate-200 bg-slate-50">
+          <button
+            id="tab-report-btn"
+            data-tab="report"
+            class="flex-1 py-4 text-sm font-medium"
+          >
+            📝 Report
+          </button>
+          <button
+            id="tab-list-btn"
+            data-tab="list"
+            class="flex-1 py-4 text-sm font-medium"
+          >
+            📋 Reports
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+          <section id="tab-report" class="p-6">
+            <div class="mb-6">
+              <h2 class="mb-2 text-xl font-bold">Report a hazard</h2>
+              <p class="text-[13px] leading-relaxed text-slate-500">
+                Mark a problem on the map. Reports are stored in Re:Earth CMS and
+                appear publicly once they are reviewed.
+              </p>
+            </div>
+
+            <form id="report-form" class="space-y-5">
+              <div>
+                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide">
+                  Category *
+                </label>
+                <div id="category-grid" class="grid grid-cols-2 gap-2.5"></div>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide">
+                  Location *
+                </label>
+                <div id="location-picker"></div>
+              </div>
+
+              <div>
+                <label
+                  for="title"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide"
+                >
+                  Title *
+                </label>
+                <input
+                  id="title"
+                  name="title"
+                  type="text"
+                  required
+                  placeholder="e.g. Cracked pavement on Flower Road"
+                  class="w-full rounded-lg border-2 border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-800 focus:ring-4 focus:ring-sky-800/10"
+                />
+              </div>
+
+              <div>
+                <label
+                  for="description"
+                  class="mb-2 block text-xs font-semibold uppercase tracking-wide"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  placeholder="What did you see?"
+                  class="min-h-25 w-full resize-y rounded-lg border-2 border-slate-200 px-4 py-3 text-sm outline-none focus:border-sky-800 focus:ring-4 focus:ring-sky-800/10"
+                ></textarea>
+              </div>
+
+              <div>
+                <label class="mb-2 block text-xs font-semibold uppercase tracking-wide">
+                  Photos
+                </label>
+                <div class="flex flex-wrap gap-3">
+                  <div id="photo-previews" class="flex flex-wrap gap-3"></div>
+                  <label
+                    class="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 hover:border-sky-800"
+                  >
+                    <input
+                      id="photo-input"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      hidden
+                    />
+                    <span class="text-2xl">📷</span>
+                    <span class="mt-1 text-[10px] text-slate-500">Add</span>
+                  </label>
+                </div>
+              </div>
+
+              <button
+                id="submit"
+                type="submit"
+                disabled
+                class="w-full rounded-xl bg-gradient-to-br from-sky-800 to-sky-600 py-4 text-[15px] font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg disabled:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:bg-none disabled:shadow-none"
+              >
+                Submit report
+              </button>
+            </form>
+          </section>
+
+          <section id="tab-list" class="hidden p-4">
+            <div id="filter-bar" class="mb-4 flex flex-wrap gap-2"></div>
+            <div id="reports-list"></div>
+          </section>
+        </div>
+      </aside>
+
+      <div class="relative flex-1">
+        <div id="map" class="h-full w-full"></div>
+
+        <div class="absolute right-4 top-4 z-[900] flex flex-col gap-2">
+          <button
+            id="locate"
+            title="My location"
+            class="flex h-11 w-11 items-center justify-center rounded-lg border border-black/10 bg-white/85 text-xl shadow-sm backdrop-blur hover:bg-white"
+          >
+            📍
+          </button>
+          <button
+            id="refresh"
+            title="Reload from the CMS"
+            class="flex h-11 w-11 items-center justify-center rounded-lg border border-black/10 bg-white/85 text-xl shadow-sm backdrop-blur hover:bg-white"
+          >
+            🔄
+          </button>
+        </div>
+
+        <div
+          class="absolute bottom-6 left-6 z-[900] min-w-45 rounded-xl bg-white/85 p-4 shadow-md backdrop-blur"
+        >
+          <div
+            class="mb-3 text-[11px] font-bold uppercase tracking-wide text-slate-500"
+          >
+            Legend
+          </div>
+          <div id="legend-items" class="space-y-2"></div>
+        </div>
+
+        <div
+          class="absolute bottom-6 right-6 z-[900] flex gap-6 rounded-xl bg-slate-900/95 p-5 shadow-lg backdrop-blur"
+        >
+          <div class="text-center">
+            <div id="stat-total" class="font-mono text-3xl font-black text-white">
+              0
+            </div>
+            <div class="mt-1 text-[10px] uppercase tracking-wide text-white/60">
+              Reports
+            </div>
+          </div>
+          <div class="text-center">
+            <div id="stat-pending" class="font-mono text-3xl font-black text-white">
+              0
+            </div>
+            <div class="mt-1 text-[10px] uppercase tracking-wide text-white/60">
+              Under review
+            </div>
+          </div>
+          <div class="text-center">
+            <div id="stat-resolved" class="font-mono text-3xl font-black text-white">
+              0
+            </div>
+            <div class="mt-1 text-[10px] uppercase tracking-wide text-white/60">
+              Resolved
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="modal"
+      class="fixed inset-0 z-[2000] hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+    >
+      <div
+        class="relative max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-8"
+      >
+        <button
+          id="modal-close"
+          class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+        >
+          ✕
+        </button>
+
+        <div class="mb-5 flex items-start gap-3">
+          <div
+            id="modal-icon"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl"
+          ></div>
+          <div>
+            <div id="modal-title" class="text-lg font-bold"></div>
+            <div id="modal-subtitle" class="text-xs text-slate-500"></div>
+          </div>
+        </div>
+
+        <div id="modal-body"></div>
+
+        <div
+          id="modal-meta"
+          class="mt-6 space-y-2 border-t border-slate-200 pt-4 text-xs text-slate-500"
+        ></div>
+      </div>
+    </div>
+
+    <div
+      id="toast"
+      class="fixed bottom-6 left-1/2 z-[3000] hidden -translate-x-1/2 items-center gap-3 rounded-xl bg-slate-900 px-5 py-3.5 text-sm text-white shadow-lg"
+    >
+      <span id="toast-icon"></span>
+      <span id="toast-message"></span>
+    </div>
+
+    <div
+      id="loading"
+      class="fixed inset-0 z-[2500] hidden flex-col items-center justify-center gap-4 bg-white/80"
+    >
+      <div
+        class="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-800"
+      ></div>
+      <div class="text-sm text-slate-500">Sending…</div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

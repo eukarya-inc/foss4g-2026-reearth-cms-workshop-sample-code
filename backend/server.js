@@ -22,6 +22,19 @@ if (!AUTH_HEADER_VALUE) {
 
 const app = express();
 
+// Answer CORS preflights here instead of forwarding them: a JSON POST from the
+// frontend sends one, and the upstream does not reply with the
+// Allow-Methods / Allow-Headers it needs. Scoped to OPTIONS so the proxyRes
+// hook below stays the only place that sets Access-Control-Allow-Origin on a
+// real response.
+app.options('*', (req, res) => {
+    res.setHeader('access-control-allow-origin', '*');
+    res.setHeader('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('access-control-allow-headers', req.headers['access-control-request-headers'] ?? '*');
+    res.setHeader('access-control-max-age', '86400');
+    res.sendStatus(204);
+});
+
 app.use(createProxyMiddleware({
     target: TARGET_URL,
     changeOrigin: true,
