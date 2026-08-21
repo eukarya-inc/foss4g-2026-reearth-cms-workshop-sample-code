@@ -1,6 +1,8 @@
-require('dotenv').config();
-const express = require('express');
-const {createProxyMiddleware} = require('http-proxy-middleware');
+import {config} from 'dotenv';
+import express from 'express';
+import {createProxyMiddleware} from 'http-proxy-middleware';
+
+config({path: new URL('.env', import.meta.url)});
 
 const {
     PORT = 8080,
@@ -26,6 +28,12 @@ app.use(createProxyMiddleware({
     on: {
         proxyReq: (req) => {
             req.setHeader(AUTH_HEADER_NAME, AUTH_HEADER_VALUE);
+        },
+        // Mutate the upstream headers instead of calling res.setHeader: they are
+        // copied onto the response after this hook runs, so an upstream
+        // Access-Control-Allow-Origin would otherwise overwrite ours.
+        proxyRes: (proxyRes) => {
+            proxyRes.headers['access-control-allow-origin'] = '*';
         },
     },
     logger: console,

@@ -55,7 +55,9 @@ Recorded in `plan.md` as deliberate decisions. Do not introduce:
 - Linter or formatter config files
 - Tests or CI
 - `vite.config.js` — Vite's defaults are used as-is
-- Runtime dependencies — Vite stays a devDependency at the repo root
+- Runtime dependencies on the frontend — Vite stays a devDependency at the repo
+  root. (The backend does have runtime deps; they live in the root
+  `package.json` too, since the repo has exactly one manifest.)
 
 ## Step folders are independently runnable
 
@@ -74,9 +76,13 @@ step or symlink to deduplicate them.
 
 ## Talking to the backend
 
-Call `http://localhost:8787` directly with `fetch`. The backend sends
-`Access-Control-Allow-Origin: *`, so cross-origin works without a dev proxy —
-which is what lets the repo stay free of `vite.config.js`.
+Call `http://localhost:8080` directly with `fetch`. The backend is an auth
+injector: it forwards every request to the CMS API and attaches the token, so
+never send credentials from the browser.
+
+The proxy injects `Access-Control-Allow-Origin: *`, overriding whatever the
+upstream sent, so cross-origin `fetch` works without a dev proxy — which is what
+lets the repo stay free of `vite.config.js`.
 
 ## Placeholders
 

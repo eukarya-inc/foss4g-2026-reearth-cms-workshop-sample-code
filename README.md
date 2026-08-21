@@ -2,10 +2,11 @@
 
 Sample code for the Re:Earth CMS workshop at FOSS4G 2026.
 
-- **Frontend** — plain HTML, CSS and JavaScript, served by [Vite](https://vite.dev/).
-- **Backend** — plain Node.js using the built-in `node:http` module.
-
-No frameworks on either side.
+- **Frontend** — plain HTML, CSS and JavaScript, served by
+  [Vite](https://vite.dev/). No framework.
+- **Backend** — a small [Express](https://expressjs.com/) proxy that forwards
+  requests to the Re:Earth CMS API and injects the auth header, so the API token
+  never reaches the browser.
 
 ## Prerequisites
 
@@ -27,7 +28,17 @@ cd foss4g-2026-reearth-cms-workshop-sample-code
 npm install
 ```
 
-One `npm install` at the repo root covers every folder.
+One `npm install` at the repo root covers every folder — there is a single
+`package.json` and a single `package-lock.json` for the whole repo.
+
+The backend also needs an env file:
+
+```bash
+cp backend/env.example backend/.env
+```
+
+Then edit `backend/.env` and put a real token in `AUTH_HEADER_VALUE`. It is
+gitignored, so it never gets committed.
 
 ## Running
 
@@ -36,7 +47,7 @@ one in each:
 
 ```bash
 npm run dev:web   # terminal 1 — http://localhost:5173
-npm run dev:api   # terminal 2 — http://localhost:8787
+npm run dev:api   # terminal 2 — http://localhost:8080
 ```
 
 The frontend page reloads automatically as you edit. The backend restarts
@@ -46,29 +57,30 @@ To run a reference step instead of your own code:
 
 ```bash
 npm run step:web -- frontend/steps/01-hello
-npm run step:api -- backend/steps/01-hello/src/main.js
 ```
 
 Other commands:
 
-| Command                                                | What it does                                                              |
-| ------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `npm run dev:web`                                      | Dev server for `frontend/workspace/`                                      |
-| `npm run dev:api`                                      | API server for `backend/workspace/`                                       |
-| `npm run step:web -- frontend/steps/<name>`            | Dev server for a frontend reference step                                  |
-| `npm run step:api -- backend/steps/<name>/src/main.js` | API server for a backend reference step                                   |
-| `npm run build:web`                                    | Production build of `frontend/workspace/` into `frontend/workspace/dist/` |
-| `npm run preview:web`                                  | Serve the production build locally                                        |
+| Command                                     | What it does                                                              |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| `npm run dev:web`                           | Dev server for `frontend/workspace/`                                      |
+| `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit                   |
+| `npm run start:api`                         | Same proxy, without the auto-restart                                       |
+| `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                                  |
+| `npm run step:api -- <file>`                | `node --watch` on any server entry point                                   |
+| `npm run build:web`                         | Production build of `frontend/workspace/` into `frontend/workspace/dist/` |
+| `npm run preview:web`                       | Serve the production build locally                                        |
 
 ## Structure
 
-| Path        | Purpose                                            |
-| ----------- | -------------------------------------------------- |
-| `frontend/` | Browser code — Vite, HTML, CSS, JavaScript.        |
-| `backend/`  | Node.js API server — `node:http`, no dependencies. |
-| `plan.md`   | Workshop outline and open questions.               |
+| Path                 | Purpose                                                     |
+| -------------------- | ----------------------------------------------------------- |
+| `frontend/`          | Browser code — Vite, HTML, CSS, JavaScript.                 |
+| `backend/server.js`  | The auth-injecting proxy.                                   |
+| `backend/env.example` | Template for `backend/.env`.                                |
+| `plan.md`            | Workshop outline and open questions.                        |
 
-Both sides have the same two folders:
+The frontend has two folders:
 
 | Path         | Purpose                                                                    |
 | ------------ | -------------------------------------------------------------------------- |
@@ -85,41 +97,46 @@ frontend/<folder>/
    └─ style.css    styles
 ```
 
-Every backend folder follows the same layout, minus the browser-only files:
-
-```txt
-backend/<folder>/
-└─ src/
-   └─ main.js      server entry point
-```
-
-Step numbers line up across both sides — `01-hello` is the setup check for the
-frontend and for the backend.
+The backend is a single file today — it has no `workspace/` or `steps/` folders.
+If backend steps are added later, they will mirror the frontend numbering.
 
 There is no `vite.config.js` — Vite's defaults are used as-is.
 
 ## The backend
 
-`backend/steps/01-hello` is a setup check, the server-side twin of the frontend's
-step 01. It exposes a single endpoint:
+`backend/server.js` is an auth injector. It forwards **every** request it
+receives to `TARGET_URL`, adds one header on the way out, and replays the
+upstream response verbatim. It has no routes of its own and rewrites nothing.
 
-```txt
-GET /api/ping  →  {"message":"pong"}
-```
+The point is to keep the API token on the server: the frontend calls
+`http://localhost:8080/…` with no credentials, and the proxy attaches them.
 
-Anything else returns `404` with `{"error":"not found"}`.
+It is configured entirely through `backend/.env`:
 
-Verify it from a terminal:
+| Variable            | Default         | Purpose                                                  |
+| ------------------- | --------------- | -------------------------------------------------------- |
+| `PORT`              | `8080`          | Port the proxy listens on                                |
+| `TARGET_URL`        | —               | **Required.** Upstream to forward to                     |
+| `AUTH_HEADER_NAME`  | `Authorization` | Name of the header to inject                             |
+| `AUTH_HEADER_VALUE` | —               | **Required.** Its value, e.g. `Bearer <token>`           |
+
+The server exits with an error message if `TARGET_URL` or `AUTH_HEADER_VALUE` is
+missing.
+
+Verify it from a terminal — the path is whatever the upstream API expects:
 
 ```bash
-curl http://localhost:8787/api/ping
+curl -i http://localhost:8080/api/...
 ```
 
-Notes:
+The proxy also sets `Access-Control-Allow-Origin: *` on every response,
+replacing whatever the upstream sent. That is what lets the frontend on port
+5173 call it directly with `fetch`, and why the repo needs no `vite.config.js`
+dev proxy.
 
-- The port is `8787`. Override it with the `PORT` environment variable.
-- The server sends `Access-Control-Allow-Origin: *`, so the frontend on port 5173
-  can call it directly without any Vite proxy configuration.
+Preflights are not answered locally — an `OPTIONS` request is forwarded upstream
+like any other. Plain `GET`s from the browser send no custom headers, since the
+token is attached server-side, so they never trigger one.
 
 ## Workshop links
 

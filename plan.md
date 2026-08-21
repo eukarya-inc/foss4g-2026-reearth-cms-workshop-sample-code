@@ -27,30 +27,31 @@ The backend's role is also open beyond the step 01 ping check — see *Open ques
 
 | Step | Frontend folder           | Backend folder           | Content                                                              |
 | ---- | ------------------------- | ------------------------ | -------------------------------------------------------------------- |
-| 01   | `frontend/steps/01-hello` | `backend/steps/01-hello` | Setup check — module import, CSS import, hot reload; `GET /api/ping` |
+| 01   | `frontend/steps/01-hello` | —                        | Setup check — module import, CSS import, hot reload                  |
 | 02   | —                         | —                        | TBD                                                                  |
 | 03   | —                         | —                        | TBD                                                                  |
 | …    | —                         | —                        | TBD                                                                  |
 
-Attendees code in `frontend/workspace/` and `backend/workspace/`; each
-`steps/NN-*` folder is an independently runnable snapshot they can jump to if they
-fall behind. Step numbers line up across both sides — a given number means the same
-thing on the frontend and on the backend.
+Attendees code in `frontend/workspace/`; each `steps/NN-*` folder is an
+independently runnable snapshot they can jump to if they fall behind.
 
-Not every step needs both sides. A frontend-only step simply has no backend folder.
+The backend is currently a single `backend/server.js` with no `workspace/` or
+`steps/` folders. If backend steps are added, the numbering will line up with the
+frontend — a given number means the same thing on both sides. Not every step
+needs both sides.
 
 ## Setup decisions
 
 | Decision              | Choice                                                                                 | Why                                                                                                   |
 | --------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Package manager       | npm                                                                                    | Ships with Node; nothing extra for attendees to install                                               |
-| Dependency layout     | One root `package.json`, Vite invoked with a root argument (`vite frontend/workspace`) | Single `npm install`, no duplicated `node_modules` per step                                           |
-| Repo layout           | `frontend/` and `backend/`, each with `workspace/` + `steps/`                          | Symmetric; neither side is the implicit default                                                       |
+| Dependency layout     | One root `package.json` for both sides, Vite invoked with a root argument (`vite frontend/workspace`) | Single `npm install`, one lockfile, no nested `node_modules`                            |
+| Repo layout           | `frontend/` with `workspace/` + `steps/`; `backend/` a single server file              | Neither side is the implicit default; the backend is small enough not to need steps yet               |
 | Build tool (frontend) | Vite (dev dependency only)                                                             | Instant hot reload, ES modules, no config file needed                                                 |
-| Backend runtime       | Node.js built-in `node:http`, zero dependencies                                        | Attendees see the raw request/response, nothing to explain                                            |
+| Backend runtime       | Express + `http-proxy-middleware` + `dotenv`                                            | A hand-rolled proxy is more code to explain than the middleware call it replaces                      |
 | Backend restart       | `node --watch`                                                                         | Built in; no nodemon. Stable from Node 22, hence the version bump                                     |
-| Backend port          | `8787`, overridable via `PORT`                                                         | Clear of Vite's 5173                                                                                  |
-| Cross-origin          | `Access-Control-Allow-Origin: *` sent by the backend                                   | Keeps the "no `vite.config.js`" decision — no dev proxy needed                                        |
+| Backend port          | `8080`, overridable via `PORT`                                                         | Clear of Vite's 5173                                                                                  |
+| Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's | Keeps the "no `vite.config.js`" decision — no dev proxy needed                                         |
 | Running both          | Two terminals (`dev:web`, `dev:api`)                                                   | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency |
 | Language              | Plain JavaScript                                                                       | Keeps the workshop about the content, not the toolchain                                               |
 | Config                | No `vite.config.js`                                                                    | Nothing to explain                                                                                    |
@@ -65,3 +66,7 @@ Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks
 - [ ] How many steps, and how long is each?
 - [ ] Language of the workshop and of the code comments (English / Japanese)?
 - [ ] Is offline fallback data needed in case venue Wi-Fi fails?
+- [ ] Do we need to answer CORS preflights locally? `Access-Control-Allow-Origin: *`
+      is injected, which covers plain `GET`s, but an `OPTIONS` preflight is still
+      forwarded upstream. Only matters if a step sends a JSON body or a custom
+      header from the browser.
