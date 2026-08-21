@@ -10,6 +10,9 @@ const OPTION_SELECTED = ["border-sky-800", "bg-sky-50"];
 const OPTION_IDLE = ["border-slate-200", "bg-white"];
 const CHIP_ACTIVE = ["bg-sky-800", "border-sky-800", "text-white"];
 const CHIP_IDLE = ["bg-white", "border-slate-200", "text-slate-500"];
+// Folds by exactly the panel's width, so the toggle riding beside it ends up
+// flush against the left edge rather than sliding off with it.
+const SIDEBAR_FOLDED = "-translate-x-[420px]";
 const PICKER_BASE =
   "cursor-pointer rounded-xl border-2 p-4 text-center transition";
 
@@ -36,6 +39,14 @@ export const showTab = (name) => {
     button.classList.remove(...(isActive ? TAB_IDLE : TAB_ACTIVE));
     button.classList.add(...(isActive ? TAB_ACTIVE : TAB_IDLE));
   });
+};
+
+export const setSidebar = (isOpen) => {
+  $("sidebar").classList.toggle(SIDEBAR_FOLDED, !isOpen);
+
+  const toggle = $("sidebar-toggle");
+  toggle.textContent = isOpen ? "‹" : "›";
+  toggle.title = isOpen ? "Hide the panel" : "Show the panel";
 };
 
 export const renderCategoryOptions = (onSelect) => {
@@ -147,7 +158,7 @@ export const setConnection = (isLive) => {
     <span>${isLive ? "Connected to CMS" : "Demo mode"}</span>`;
 };
 
-export const setLocation = ({ lat, lng }) => {
+export const setLocation = ({ lat, lng }, onClear) => {
   const picker = $("location-picker");
 
   picker.className = `${PICKER_BASE} border-solid border-emerald-600 bg-emerald-50`;
@@ -156,7 +167,18 @@ export const setLocation = ({ lat, lng }) => {
     <div class="text-[13px] text-slate-500">Location selected</div>
     <div class="mt-2 inline-block rounded bg-emerald-100 px-3 py-1.5 font-mono text-[11px] text-emerald-700">
       ${lat.toFixed(6)}, ${lng.toFixed(6)}
+    </div>
+    <div>
+      <button
+        type="button"
+        data-clear-location
+        class="mt-2 text-[11px] font-medium text-slate-500 underline underline-offset-2 hover:text-red-600"
+      >Clear location</button>
     </div>`;
+
+  picker
+    .querySelector("[data-clear-location]")
+    .addEventListener("click", onClear);
 };
 
 export const resetLocation = () => {

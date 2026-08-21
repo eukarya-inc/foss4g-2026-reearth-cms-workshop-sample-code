@@ -32,8 +32,6 @@ export const initMap = (onPick) => {
   });
 
   L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION }).addTo(map);
-  L.control.zoom({ position: "topleft" }).addTo(map);
-
   map.on("click", (event) => {
     showPickMarker(event.latlng);
     onPick(event.latlng);
@@ -76,6 +74,17 @@ export const locateMe = (onError) => {
       map.setView([position.coords.latitude, position.coords.longitude], 16),
     onError,
   );
+};
+
+// Leaflet's own zoom control is disabled in the map options above, because its
+// buttons cannot be restyled to match the rest of the control column without a
+// stylesheet. These drive the same behaviour from our own buttons.
+export const zoomIn = () => {
+  map.zoomIn();
+};
+
+export const zoomOut = () => {
+  map.zoomOut();
 };
 
 export const clearPickMarker = () => {

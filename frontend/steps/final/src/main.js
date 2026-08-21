@@ -6,6 +6,8 @@ import {
   initMap,
   locateMe,
   renderMarkers,
+  zoomIn,
+  zoomOut,
 } from "./map.js";
 import * as ui from "./ui.js";
 
@@ -15,6 +17,7 @@ const state = {
   category: null,
   location: null,
   photos: [],
+  sidebarOpen: true,
 };
 
 let lastPhotoId = 0;
@@ -76,6 +79,12 @@ const removePhoto = (id) => {
   ui.renderPhotos(state.photos, removePhoto);
 };
 
+const clearLocation = () => {
+  state.location = null;
+  ui.resetLocation();
+  clearPickMarker();
+};
+
 const validate = () => {
   const hasTitle = document.getElementById("title").value.trim().length > 0;
   ui.setSubmitEnabled(hasTitle && !!state.category && !!state.location);
@@ -135,14 +144,12 @@ const resetForm = (form, { keepPhotoUrls = false } = {}) => {
   }
 
   state.category = null;
-  state.location = null;
   state.photos = [];
 
   ui.markCategory(null);
-  ui.resetLocation();
   ui.renderPhotos(state.photos, removePhoto);
   ui.setSubmitEnabled(false);
-  clearPickMarker();
+  clearLocation();
 };
 
 // Module scripts are deferred, so the DOM is already parsed by the time this
@@ -166,7 +173,10 @@ ui.markFilter(state.filter);
 
 initMap((latlng) => {
   state.location = latlng;
-  ui.setLocation(latlng);
+  ui.setLocation(latlng, () => {
+    clearLocation();
+    validate();
+  });
   validate();
 });
 
@@ -198,8 +208,18 @@ document.getElementById("refresh").addEventListener("click", () => {
   load();
 });
 
+document.getElementById("zoom-in").addEventListener("click", zoomIn);
+document.getElementById("zoom-out").addEventListener("click", zoomOut);
+
 document.getElementById("locate").addEventListener("click", () => {
   locateMe(() => ui.showToast("Could not get your location.", "⚠️"));
+});
+
+// The panel is an overlay, so folding it never resizes the map — nothing to
+// tell Leaflet about.
+document.getElementById("sidebar-toggle").addEventListener("click", () => {
+  state.sidebarOpen = !state.sidebarOpen;
+  ui.setSidebar(state.sidebarOpen);
 });
 
 load();
