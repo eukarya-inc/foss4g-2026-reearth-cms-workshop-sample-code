@@ -5,9 +5,13 @@
 // the integration token on the way out, so nothing in this file is a secret.
 export const API_BASE_URL = "http://localhost:8080";
 
-// Read path — the CMS public API needs no auth.
-// Shape: /api/p/<workspace alias>/<project alias>/<model key>
-export const PUBLIC_ITEMS_PATH = "/api/p/eukarya/kobe-demo/hazard_reports";
+// Read path — the CMS public API needs no auth, but it does want the aliases
+// you gave the project and the model, not their ids.
+export const WORKSPACE_ALIAS = "eukarya";
+export const PROJECT_ALIAS = "YOUR_PROJECT_ALIAS";
+export const MODEL_KEY = "YOUR_MODEL_KEY";
+
+export const PUBLIC_ITEMS_PATH = `/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
 
 // Write path — the integration API wants ids, not aliases. Read them off the
 // CMS admin URL:
@@ -19,9 +23,10 @@ export const MODEL_ID = "YOUR_MODEL_ID";
 export const ASSETS_PATH = `/api/${WORKSPACE_ID}/projects/${PROJECT_ID}/assets`;
 export const ITEMS_PATH = `/api/${WORKSPACE_ID}/projects/${PROJECT_ID}/models/${MODEL_ID}/items`;
 
-// Map defaults — central Kobe.
-export const MAP_CENTER = [34.6901, 135.1956];
-export const MAP_ZOOM = 13;
+// Map defaults — central Hiroshima. Zoom 12 keeps the hillside wards in the
+// north and the port in the south on screen together.
+export const MAP_CENTER = [34.3853, 132.4553];
+export const MAP_ZOOM = 12;
 export const TILE_URL =
   "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png";
 export const TILE_ATTRIBUTION =

@@ -2,7 +2,7 @@ import { createItem, listReports, uploadAsset } from "./cms.js";
 import { MAX_PHOTOS } from "./config.js";
 import {
   clearPickMarker,
-  focusOn,
+  panToReport,
   initMap,
   locateMe,
   renderMarkers,
@@ -28,17 +28,20 @@ const render = () => {
   const reports = visibleReports();
 
   renderMarkers(reports, openDetail);
-  ui.renderList(reports, (id) => openDetail(findReport(id)));
+  ui.renderList(reports, (id) => openDetail(findReport(id), { pan: true }));
   ui.renderStats(state.reports);
 };
 
 const findReport = (id) => state.reports.find((report) => report.id === id);
 
-const openDetail = (report) => {
+// Clicking a marker only opens the panel: you can already see where it is, so
+// moving the map under the modal is just disorienting. A list click pans,
+// because that report may well be off screen.
+const openDetail = (report, { pan = false } = {}) => {
   if (!report) return;
 
   ui.showDetail(report);
-  focusOn(report);
+  if (pan) panToReport(report);
 };
 
 const load = async () => {

@@ -97,7 +97,8 @@ frontend/<folder>/
    └─ style.css    styles
 ```
 
-`frontend/steps/final` is the finished app — the Kobe citizen hazard-report map.
+`frontend/steps/final` is the finished app — the Hiroshima citizen hazard-report
+map.
 It splits its JavaScript across several files in `src/` and pulls Tailwind and
 Leaflet from a CDN, so there is still nothing to install and no `style.css`:
 
@@ -105,9 +106,10 @@ Leaflet from a CDN, so there is still nothing to install and no `style.css`:
 npm run step:web -- frontend/steps/final
 ```
 
-To submit reports from it, fill in the workspace, project and model ids at the
-top of `frontend/steps/final/src/config.js`. Reading needs no ids — and if the
-CMS is unreachable, the app falls back to demo data and says so in the header.
+Fill in the aliases and ids at the top of
+`frontend/steps/final/src/config.js` to point it at a real project. Until you
+do — or whenever the CMS is unreachable — the app falls back to demo data and
+says so in the header.
 
 The backend is a single file today — it has no `workspace/` or `steps/` folders.
 If backend steps are added later, they will mirror the frontend numbering.

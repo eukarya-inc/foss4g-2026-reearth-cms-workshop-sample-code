@@ -141,7 +141,7 @@ export const setConnection = (isLive) => {
     ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-300"
     : "border-red-500/40 bg-red-500/20 text-red-300";
 
-  badge.className = `flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs ${tone}`;
+  badge.className = `flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] ${tone}`;
   badge.innerHTML = `
     <span class="h-2 w-2 rounded-full ${isLive ? "animate-pulse bg-emerald-400" : "bg-red-400"}"></span>
     <span>${isLive ? "Connected to CMS" : "Demo mode"}</span>`;

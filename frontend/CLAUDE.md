@@ -94,7 +94,7 @@ lets the repo stay free of `vite.config.js`.
 
 ## The final step
 
-`steps/final/` is the finished sample — the Kobe citizen hazard-report map. It
+`steps/final/` is the finished sample — the Hiroshima citizen hazard-report map. It
 departs from the conventions above in three ways, all deliberate:
 
 | Deviation | Why |

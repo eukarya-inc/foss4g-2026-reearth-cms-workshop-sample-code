@@ -58,9 +58,11 @@ export const renderMarkers = (reports, onSelect) => {
   });
 };
 
-export const focusOn = (report) => {
+// Pan only — never change the zoom. Whatever level the attendee is on is the
+// one they chose.
+export const panToReport = (report) => {
   if (!hasPosition(report)) return;
-  map.setView([report.latitude, report.longitude], 16);
+  map.panTo([report.latitude, report.longitude]);
 };
 
 export const locateMe = (onError) => {
