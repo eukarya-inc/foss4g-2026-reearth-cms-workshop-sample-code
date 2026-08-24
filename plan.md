@@ -32,8 +32,9 @@ The backend keeps its single role: an auth injector. The frontend calls the
 token-bearing CMS endpoints directly through it, so the integration token never
 reaches the browser. The read is not one of them — the public API needs no auth,
 so the browser calls the CMS itself and the map works with no backend running.
-Workspace / project / model ids do sit in the frontend — they are not secrets,
-and saying so is part of the workshop.
+The workspace and project aliases and the model key do sit in the frontend —
+they are not secrets, and saying so is part of the workshop. Both APIs take them,
+so `config.js` carries one set of identifiers rather than one per path.
 
 ## Steps
 
@@ -91,9 +92,9 @@ Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks
       exercised from a browser. If it does not, reads have to go back through the
       injector — a `vite.config.js` dev proxy is ruled out.
 - [ ] Which Re:Earth CMS project do attendees use? A Hiroshima project still has
-      to be created. Every identifier in `frontend/steps/final/src/config.js` is
-      a placeholder — the aliases for reading as well as the ids for writing —
-      so the app runs on demo data until they are filled in.
+      to be created. Until the aliases and the model key in
+      `frontend/steps/final/src/config.js` point at a real project, the app runs
+      on demo data.
 - [ ] How many steps, and how long is each?
 - [ ] Does the demo model's schema match the field keys and types in
       `toApiFields()` (`cms.js`)? Untested against a live project.

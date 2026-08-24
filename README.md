@@ -107,10 +107,11 @@ Leaflet from a CDN, so there is still nothing to install and no `style.css`:
 npm run step:web -- frontend/steps/final
 ```
 
-Fill in the aliases and ids at the top of
-`frontend/steps/final/src/config.js` to point it at a real project. Until you
-do — or whenever the CMS is unreachable — the app falls back to demo data and
-says so in the header.
+Fill in the workspace and project aliases and the model key at the top of
+`frontend/steps/final/src/config.js` to point it at a real project — the read
+path and the write path share that one set of identifiers. Until you do — or
+whenever the CMS is unreachable — the app falls back to demo data and says so in
+the header.
 
 The backend is a single file today — it has no `workspace/` or `steps/` folders.
 If backend steps are added later, they will mirror the frontend numbering.
