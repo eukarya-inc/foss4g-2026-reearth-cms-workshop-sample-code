@@ -28,10 +28,12 @@ the internal `kobe-map-server` demo, whose frontend was one 2200-line
 The finished app lives in `frontend/steps/final`. Steps `02`…`NN` get derived
 from it by working backwards.
 
-The backend keeps its single role: an auth injector. The frontend calls the CMS
-endpoints directly through it, so the integration token never reaches the
-browser. Workspace / project / model ids do sit in the frontend — they are not
-secrets, and saying so is part of the workshop.
+The backend keeps its single role: an auth injector. The frontend calls the
+token-bearing CMS endpoints directly through it, so the integration token never
+reaches the browser. The read is not one of them — the public API needs no auth,
+so the browser calls the CMS itself and the map works with no backend running.
+Workspace / project / model ids do sit in the frontend — they are not secrets,
+and saying so is part of the workshop.
 
 ## Steps
 
@@ -63,6 +65,7 @@ needs both sides.
 | Backend restart       | `node --watch`                                                                                        | Built in; no nodemon. Stable from Node 22, hence the version bump                                                                           |
 | Backend port          | `8080`, overridable via `PORT`                                                                        | Clear of Vite's 5173                                                                                                                        |
 | Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's                     | Keeps the "no `vite.config.js`" decision — no dev proxy needed                                                                              |
+| Read path             | Public API called straight from the browser; only writes go through the injector                       | Nothing to hide on a read, so a proxy hop would only obscure the lesson — and the map then works with no backend and no token               |
 | Running both          | Two terminals (`dev:web`, `dev:api`)                                                                  | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency                                       |
 | Language              | Plain JavaScript                                                                                      | Keeps the workshop about the content, not the toolchain                                                                                     |
 | Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                               | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too |
@@ -83,6 +86,10 @@ Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks
 - [x] Do we need to answer CORS preflights locally? — yes. The item POST sends
       `Content-Type: application/json`, so `backend/server.js` now answers
       `OPTIONS` itself instead of forwarding it upstream.
+- [ ] Does the CMS public API send `Access-Control-Allow-Origin` on the item
+      list? The proxy used to force it in, so the direct read has never been
+      exercised from a browser. If it does not, reads have to go back through the
+      injector — a `vite.config.js` dev proxy is ruled out.
 - [ ] Which Re:Earth CMS project do attendees use? A Hiroshima project still has
       to be created. Every identifier in `frontend/steps/final/src/config.js` is
       a placeholder — the aliases for reading as well as the ids for writing —

@@ -6,7 +6,8 @@ Sample code for the Re:Earth CMS workshop at FOSS4G 2026.
   [Vite](https://vite.dev/). No framework.
 - **Backend** — a small [Express](https://expressjs.com/) proxy that forwards
   requests to the Re:Earth CMS API and injects the auth header, so the API token
-  never reaches the browser.
+  never reaches the browser. Only the *write* calls need it: reading goes from
+  the browser straight to the CMS public API, which needs no auth.
 
 ## Prerequisites
 
@@ -124,6 +125,13 @@ upstream response verbatim. It has no routes of its own and rewrites nothing.
 
 The point is to keep the API token on the server: the frontend calls
 `http://localhost:8080/…` with no credentials, and the proxy attaches them.
+
+Only the calls that actually need the token go through it — the asset upload and
+the item POST. The read hits the CMS **public API**
+(`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`), which needs no auth, so
+the browser calls `https://api.cms.reearth.io` directly and skips the proxy
+entirely. That means the map fills with real data with no backend running at all;
+the backend is only needed to submit a report.
 
 It is configured entirely through `backend/.env`:
 

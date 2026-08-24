@@ -84,9 +84,16 @@ step or symlink to deduplicate them.
 
 ## Talking to the backend
 
-Call `http://localhost:8080` directly with `fetch`. The backend is an auth
-injector: it forwards every request to the CMS API and attaches the token, so
-never send credentials from the browser.
+Only the **writes** go to the backend. Call `http://localhost:8080` directly
+with `fetch`. The backend is an auth injector: it forwards every request to the
+CMS API and attaches the token, so never send credentials from the browser.
+
+**Reads go straight to the CMS.** The public API
+(`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`) needs no auth, so routing
+it through the proxy would buy nothing and hide the point. `config.js` names the
+two origins apart — `CMS_BASE_URL` for the public read, `PROXY_BASE_URL` for the
+token-bearing writes — and `request()` in `cms.js` takes a full URL so each call
+site says which one it is talking to.
 
 The proxy injects `Access-Control-Allow-Origin: *`, overriding whatever the
 upstream sent, so cross-origin `fetch` works without a dev proxy — which is what

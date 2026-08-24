@@ -1,24 +1,26 @@
 import {
-  API_BASE_URL,
   ASSETS_PATH,
   ITEMS_PATH,
-  PUBLIC_ITEMS_PATH,
+  PROXY_BASE_URL,
+  PUBLIC_ITEMS_URL,
 } from "./config.js";
 
-// Every call goes to the backend proxy, never to the CMS directly: the proxy is
-// what holds the integration token.
-const request = async (path, options) => {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+// Each caller passes a full URL, because the two halves of the app talk to two
+// different origins: reads go to the CMS itself, writes go to the proxy.
+const request = async (url, options) => {
+  const response = await fetch(url, options);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} ${response.statusText}`);
   }
   return response.json();
 };
 
-// Reading falls back to demo data, so the sample still runs with no network.
+// The public API needs no auth, so this goes straight to the CMS — no backend,
+// no token. Reading falls back to demo data, so the sample still runs with no
+// network.
 export const listReports = async () => {
   try {
-    const data = await request(PUBLIC_ITEMS_PATH, {
+    const data = await request(PUBLIC_ITEMS_URL, {
       headers: { Accept: "application/json" },
     });
     return { reports: normalizeResponse(data), isLive: true };
@@ -28,19 +30,23 @@ export const listReports = async () => {
   }
 };
 
-// One POST per photo. The proxy has no routes of its own, so there is no batch
-// upload endpoint to call.
+// Writes need the integration token, so they go through the proxy — it is the
+// only place that holds it. One POST per photo: the proxy has no routes of its
+// own, so there is no batch upload endpoint to call.
 export const uploadAsset = async (file) => {
   const body = new FormData();
   body.append("file", file);
   body.append("skipDecompression", "true");
 
-  const asset = await request(ASSETS_PATH, { method: "POST", body });
+  const asset = await request(`${PROXY_BASE_URL}${ASSETS_PATH}`, {
+    method: "POST",
+    body,
+  });
   return asset.id;
 };
 
 export const createItem = (draft, assetIds) =>
-  request(ITEMS_PATH, {
+  request(`${PROXY_BASE_URL}${ITEMS_PATH}`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ fields: toApiFields(draft, assetIds) }),
