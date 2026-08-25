@@ -1,4 +1,4 @@
-// Step 05 — sending a report back to the CMS.
+// Step 04 — sending a report back to the CMS.
 //
 // Reading needed no auth, so it went straight to the CMS and the backend was
 // never involved. Writing is different: it needs the integration token, and the

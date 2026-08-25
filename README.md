@@ -58,7 +58,7 @@ automatically too, thanks to `node --watch`.
 own code, and you can jump straight to the one the room is on:
 
 ```bash
-npm run step:web -- frontend/steps/02-map
+npm run step:web -- frontend/steps/01-map
 ```
 
 Other commands:
@@ -103,7 +103,7 @@ no HTML to write: Tailwind and Leaflet come from a CDN, so there is nothing to
 install either.
 
 `frontend/steps/final` is the finished app — the Hiroshima citizen hazard-report
-map, which is step 05 plus photo upload:
+map, which is step 04 plus photo upload:
 
 ```bash
 npm run step:web -- frontend/steps/final
@@ -173,16 +173,15 @@ accepts.
 
 | Step | Where                       | Content                                            |
 | ---- | --------------------------- | -------------------------------------------------- |
-| 01   | `frontend/steps/01-hello`   | Setup check                                        |
-| 02   | `frontend/steps/02-map`     | Leaflet map and tiles                              |
-| 03   | `frontend/steps/03-read`    | Read from the CMS public API                       |
-| 04   | `frontend/steps/04-markers` | Reports become markers                             |
-| 05   | `frontend/steps/05-report`  | The proxy and the token, then send a report        |
-| —    | `frontend/steps/final`      | The finished app, step 05 plus photo upload        |
+| 01   | `frontend/steps/01-map`     | Install, run the dev server, then the map          |
+| 02   | `frontend/steps/02-read`    | Read from the CMS public API                       |
+| 03   | `frontend/steps/03-markers` | Reports become markers                             |
+| 04   | `frontend/steps/04-report`  | The proxy and the token, then send a report        |
+| —    | `frontend/steps/final`      | The finished app, step 04 plus photo upload        |
 
 Building the CMS project itself — workspace, model, items, integration token —
 is covered by the workshop textbook, not by this repo. You need it done before
-step 03, which is the first step that reads from your project.
+step 02, which is the first step that reads from your project.
 
 Timings and the reasoning behind the split are in `plan.md`.
 
