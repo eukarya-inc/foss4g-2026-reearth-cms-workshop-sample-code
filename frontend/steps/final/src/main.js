@@ -3,11 +3,13 @@
 // Everything the app does lives in this one file, in the order the workshop
 // builds it: configuration, the map, reading from the CMS, writing back to it,
 // then the wiring that ties them together. The parts an attendee never edits —
-// the markup, the rendering and the demo data — come from frontend/common.
+// the markup, the rendering, the parsing helpers and the demo data — come from
+// frontend/common.
 
 import LAYOUT from "../../../common/layout.html?raw";
 import { categoryOf, MAX_PHOTOS } from "../../../common/categories.js";
 import { DEMO_REPORTS } from "../../../common/demo-reports.js";
+import { readPoint, toPhotoUrls } from "../../../common/parse.js";
 import * as ui from "../../../common/ui.js";
 
 // The markup has to be in the DOM before anything looks an element up, so this
@@ -245,8 +247,8 @@ const normalizeResponse = (data) => {
 };
 
 // The CMS returns fields either as an array of {key, value} pairs or as plain
-// properties, and geometry either as GeoJSON or as a JSON string. Accept all of
-// them so a model whose schema does not match exactly still renders.
+// properties, so accept both. readPoint() and toPhotoUrls() in common/parse.js
+// do the same for the location and the photos.
 const normalizeItem = (item) => {
   const fields = Array.isArray(item.fields)
     ? Object.fromEntries(item.fields.map((f) => [f.key ?? f.id, f.value]))
@@ -269,32 +271,6 @@ const normalizeItem = (item) => {
     createdAt: item.createdAt ?? fields.createdAt ?? null,
   };
 };
-
-const readPoint = (location) => {
-  if (!location) return null;
-
-  const geometry = typeof location === "string" ? safeParse(location) : location;
-  if (Array.isArray(geometry?.coordinates)) return geometry.coordinates;
-
-  const longitude = geometry?.lng ?? geometry?.longitude;
-  const latitude = geometry?.lat ?? geometry?.latitude;
-  if (longitude === undefined || latitude === undefined) return null;
-
-  return [Number(longitude), Number(latitude)];
-};
-
-const safeParse = (text) => {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-};
-
-const toPhotoUrls = (photos) =>
-  (Array.isArray(photos) ? photos : [])
-    .map((photo) => (typeof photo === "string" ? photo : photo?.url))
-    .filter(Boolean);
 
 // ---------------------------------------------------------------------------
 // State and behaviour

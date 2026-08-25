@@ -8,6 +8,7 @@
 import LAYOUT from "../../../common/layout.html?raw";
 import { categoryOf } from "../../../common/categories.js";
 import { DEMO_REPORTS } from "../../../common/demo-reports.js";
+import { readPoint, toPhotoUrls } from "../../../common/parse.js";
 import * as ui from "../../../common/ui.js";
 
 // The markup has to be in the DOM before anything looks an element up, so this
@@ -162,9 +163,9 @@ const normalizeResponse = (data) => {
 };
 
 // The CMS returns fields either as an array of {key, value} pairs or as plain
-// properties, and geometry either as GeoJSON or as a JSON string. Accept all of
-// them so a model whose schema does not match exactly still renders — which is
-// what stops a small schema difference from producing an empty map.
+// properties, so accept both. readPoint() and toPhotoUrls() in common/parse.js
+// do the same for the location and the photos. Being tolerant here is what
+// stops a small difference in your model from producing an empty map.
 const normalizeItem = (item) => {
   const fields = Array.isArray(item.fields)
     ? Object.fromEntries(item.fields.map((f) => [f.key ?? f.id, f.value]))
@@ -187,33 +188,6 @@ const normalizeItem = (item) => {
     createdAt: item.createdAt ?? fields.createdAt ?? null,
   };
 };
-
-const readPoint = (location) => {
-  if (!location) return null;
-
-  const geometry = typeof location === "string" ? safeParse(location) : location;
-  // GeoJSON order is [longitude, latitude] — the opposite of Leaflet's.
-  if (Array.isArray(geometry?.coordinates)) return geometry.coordinates;
-
-  const longitude = geometry?.lng ?? geometry?.longitude;
-  const latitude = geometry?.lat ?? geometry?.latitude;
-  if (longitude === undefined || latitude === undefined) return null;
-
-  return [Number(longitude), Number(latitude)];
-};
-
-const safeParse = (text) => {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-};
-
-const toPhotoUrls = (photos) =>
-  (Array.isArray(photos) ? photos : [])
-    .map((photo) => (typeof photo === "string" ? photo : photo?.url))
-    .filter(Boolean);
 
 // ---------------------------------------------------------------------------
 // State and behaviour
