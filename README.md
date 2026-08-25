@@ -54,10 +54,11 @@ npm run dev:api   # terminal 2 — http://localhost:8080
 The frontend page reloads automatically as you edit. The backend restarts
 automatically too, thanks to `node --watch`.
 
-To run a reference step instead of your own code:
+**Falling behind?** Every step has a finished copy you can run instead of your
+own code, and you can jump straight to the one the room is on:
 
 ```bash
-npm run step:web -- frontend/steps/01-hello
+npm run step:web -- frontend/steps/03-map
 ```
 
 Other commands:
@@ -66,7 +67,6 @@ Other commands:
 | ------------------------------------------- | ------------------------------------------------------------------------- |
 | `npm run dev:web`                           | Dev server for `frontend/workspace/`                                      |
 | `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit                   |
-| `npm run start:api`                         | Same proxy, without the auto-restart                                       |
 | `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                                  |
 | `npm run step:api -- <file>`                | `node --watch` on any server entry point                                   |
 | `npm run build:web`                         | Production build of `frontend/workspace/` into `frontend/workspace/dist/` |
@@ -74,44 +74,48 @@ Other commands:
 
 ## Structure
 
-| Path                 | Purpose                                                     |
-| -------------------- | ----------------------------------------------------------- |
-| `frontend/`          | Browser code — Vite, HTML, CSS, JavaScript.                 |
-| `backend/server.js`  | The auth-injecting proxy.                                   |
-| `backend/env.example` | Template for `backend/.env`.                                |
-| `plan.md`            | Workshop outline and open questions.                        |
+| Path                  | Purpose                                        |
+| --------------------- | ---------------------------------------------- |
+| `frontend/`           | Browser code — Vite, HTML, JavaScript.         |
+| `backend/server.js`   | The auth-injecting proxy.                      |
+| `backend/env.example` | Template for `backend/.env`.                   |
+| `docs/`               | Handouts for the steps that have no code.      |
+| `plan.md`             | Workshop outline and open questions.           |
 
-The frontend has two folders:
+The frontend has three folders:
 
 | Path         | Purpose                                                                    |
 | ------------ | -------------------------------------------------------------------------- |
+| `common/`    | Code you never have to write. Imported by every folder — do not edit.      |
 | `workspace/` | **Write your code here.** This is your starting point during the workshop. |
 | `steps/`     | Reference code for each step. Use it to catch up or to compare.            |
 
-Every frontend folder follows this layout:
+You write in exactly one file all session:
 
 ```txt
-frontend/<folder>/
-├─ index.html      entry point
+frontend/workspace/
+├─ index.html      a ~20-line shell you never touch
 └─ src/
-   ├─ main.js      JavaScript
-   └─ style.css    styles
+   └─ main.js      ← everything you write goes here
 ```
 
+The markup, the DOM rendering, the category list and the offline demo data live
+in `frontend/common/` and are imported. That is why there is no `style.css` and
+no HTML to write: Tailwind and Leaflet come from a CDN, so there is nothing to
+install either.
+
 `frontend/steps/final` is the finished app — the Hiroshima citizen hazard-report
-map.
-It splits its JavaScript across several files in `src/` and pulls Tailwind and
-Leaflet from a CDN, so there is still nothing to install and no `style.css`:
+map, which is step 07 plus photo upload:
 
 ```bash
 npm run step:web -- frontend/steps/final
 ```
 
-Fill in the workspace and project aliases and the model key at the top of
-`frontend/steps/final/src/config.js` to point it at a real project — the read
-path and the write path share that one set of identifiers. Until you do — or
-whenever the CMS is unreachable — the app falls back to demo data and says so in
-the header.
+To point any folder at a real CMS project, fill in the workspace and project
+aliases and the model key at the **top of its `src/main.js`** — the read path and
+the write path share that one set of identifiers. `docs/step-02-cms.md` walks
+through creating the project and finding them. Until you do — or whenever the CMS
+is unreachable — the app falls back to demo data and says so in the header.
 
 The backend is a single file today — it has no `workspace/` or `steps/` folders.
 If backend steps are added later, they will mirror the frontend numbering.
@@ -130,9 +134,13 @@ The point is to keep the API token on the server: the frontend calls
 Only the calls that actually need the token go through it — the asset upload and
 the item POST. The read hits the CMS **public API**
 (`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`), which needs no auth, so
-the browser calls `https://api.cms.reearth.io` directly and skips the proxy
-entirely. That means the map fills with real data with no backend running at all;
-the backend is only needed to submit a report.
+the browser calls the CMS host directly and skips the proxy entirely. That means
+the map fills with real data with no backend running at all; the backend is only
+needed to submit a report.
+
+Point `TARGET_URL` at the same CMS host the frontend reads from — the value at
+the top of your `src/main.js`. If the two disagree you will read from one
+instance and write to another, which fails in a confusing way.
 
 It is configured entirely through `backend/.env`:
 
@@ -162,6 +170,21 @@ dev proxy.
 forwarded. Plain `GET`s never trigger a preflight, but posting a JSON body does,
 and the upstream does not reply to those preflights in a way the browser
 accepts.
+
+## The steps
+
+| Step | Where                       | Content                                            |
+| ---- | --------------------------- | -------------------------------------------------- |
+| 01   | `frontend/steps/01-hello`   | Setup check                                        |
+| 02   | `docs/step-02-cms.md`       | Build your CMS project — no code                   |
+| 03   | `frontend/steps/03-map`     | Leaflet map and tiles                              |
+| 04   | `frontend/steps/04-read`    | Read from the CMS public API                       |
+| 05   | `frontend/steps/05-markers` | Reports become markers                             |
+| 06   | `backend/server.js`         | The proxy and the token — no frontend code         |
+| 07   | `frontend/steps/07-report`  | Send a new report back to the CMS                  |
+| —    | `frontend/steps/final`      | The finished app, step 07 plus photo upload        |
+
+Timings and the reasoning behind the split are in `plan.md`.
 
 ## Workshop links
 

@@ -8,25 +8,57 @@ be read top to bottom without jumping around.
 
 ## Layout
 
-| Path             | Purpose                                                       |
-| ---------------- | ------------------------------------------------------------- |
-| `workspace/`     | Attendee starting point. They write their code here.          |
-| `steps/NN-name/` | Reference snapshot for one step. Used to catch up or compare. |
+| Path             | Purpose                                                        |
+| ---------------- | -------------------------------------------------------------- |
+| `common/`        | Given code. Imported by every folder, edited by no attendee.   |
+| `workspace/`     | Attendee starting point. They write their code here.           |
+| `steps/NN-name/` | Reference snapshot for one step. Used to catch up or compare.  |
 | `steps/final/`   | The finished app the steps build toward. See *The final step*. |
 
-Every folder has the same shape — an `index.html` plus a `src/`:
+Every folder except `steps/01-hello/` has the same shape — a shell `index.html`
+plus a single `src/main.js`:
 
 ```txt
 <folder>/
-├─ index.html      entry point
+├─ index.html      ~20-line shell: CDN tags, <div id="app">, the module script
 └─ src/
-   ├─ main.js      JavaScript
-   └─ style.css    styles
+   └─ main.js      all of this folder's JavaScript
 ```
 
-`steps/final/` splits its JavaScript across several modules in `src/` and has no
-`style.css` at all; every other folder keeps its JavaScript in `main.js` and its
-styles in `style.css`.
+`steps/01-hello/` predates this and keeps its own `main.js` + `style.css`; it is
+a setup check, and the Vite CSS import is the point of it. Nothing else has a
+`style.css` — Tailwind from the CDN covers every rule the app needs.
+
+## What lives in `common/`
+
+| File               | Contents                                                     |
+| ------------------ | ------------------------------------------------------------ |
+| `layout.html`      | The app's markup. Injected into `#app`, not parsed from HTML. |
+| `ui.js`            | Every DOM rendering function. No data logic.                  |
+| `categories.js`    | `CATEGORIES`, `STATUS_LABELS`, `MAX_PHOTOS`, `categoryOf`.    |
+| `parse.js`         | `readPoint`, `toPhotoUrls` — tolerant field reading.          |
+| `demo-reports.js`  | The seven offline reports.                                    |
+
+A step's `main.js` starts by importing these and injecting the layout:
+
+```js
+import LAYOUT from "../../../common/layout.html?raw";
+import * as ui from "../../../common/ui.js";
+
+document.getElementById("app").innerHTML = LAYOUT;
+```
+
+`?raw` is a Vite built-in, so this needs no config and no build step, and the
+markup stays a real `.html` file rather than a template literal. `workspace/`
+sits one directory shallower than a step, so its imports are `../../common/…`
+where a step's are `../../../common/…`. That import block is the only difference
+between an attendee's file and the matching step snapshot.
+
+**Anything that measures an element at startup must cope with being early.**
+Tailwind styles the injected markup a moment after `main.js` runs, so an element
+read immediately gives a pre-Tailwind size. `initMap()` observes its container
+and calls `map.invalidateSize()` for exactly this reason — without it the bottom
+of the map stays grey.
 
 ## Commands
 
@@ -66,21 +98,32 @@ Recorded in `plan.md` as deliberate decisions. Do not introduce:
 
 ## Step folders are independently runnable
 
-Each `steps/NN-*` folder must run on its own so an attendee who falls behind
-can jump straight to it. `style.css` is therefore **duplicated verbatim**
-between `workspace/` and every step folder.
+Each `steps/NN-*` folder must run on its own so an attendee who falls behind can
+jump straight to it. Every folder is its own Vite root, which is why each one
+needs its own `index.html`.
 
-This duplication is intentional. Never extract shared files, never add a build
-step or symlink to deduplicate them.
+That shell is the **only** duplicated file, and it is duplicated verbatim — the
+same ~20 lines everywhere, `workspace/` included. Keep it that way: if you
+change one, change them all.
 
-`steps/final/` is the exception: it styles entirely with Tailwind and ships no
-`style.css`, so there is nothing to duplicate.
+Everything else that is shared lives in `common/` and is imported. This does not
+break standalone runnability: `common/` is inside the repo workspace root, so
+Vite's default `server.fs.allow` serves it in dev and Rollup inlines it at build
+time, with no `vite.config.js` either way.
+
+Never deduplicate the shell with a symlink or a build step — a symlink breaks
+for attendees on Windows, and a build step is a thing to explain.
 
 ## Adding a step
 
-1. Copy the previous step folder, bump the number, keep it fully self-contained.
-2. Update the Steps table in `plan.md`.
-3. Update `README.md` only if the command list changes.
+1. Copy the previous step folder and bump the number. Its `main.js` should stay a
+   superset of the one before it — steps grow a file, they never rearrange it.
+2. Copy the shell `index.html` across unchanged.
+3. Update the Steps table in `plan.md`, including the typing-load line.
+4. Update `README.md` only if the command list changes.
+
+Adding shared code means adding it to `common/`, never copying it into each
+folder.
 
 ## Talking to the backend
 
@@ -90,10 +133,10 @@ CMS API and attaches the token, so never send credentials from the browser.
 
 **Reads go straight to the CMS.** The public API
 (`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`) needs no auth, so routing
-it through the proxy would buy nothing and hide the point. `config.js` names the
-two origins apart — `CMS_BASE_URL` for the public read, `PROXY_BASE_URL` for the
-token-bearing writes — and `request()` in `cms.js` takes a full URL so each call
-site says which one it is talking to.
+it through the proxy would buy nothing and hide the point. The configuration
+block at the top of `main.js` names the two origins apart — `CMS_BASE_URL` for
+the public read, `PROXY_BASE_URL` for the token-bearing writes — and `request()`
+takes a full URL, so each call site says which one it is talking to.
 
 The proxy injects `Access-Control-Allow-Origin: *`, overriding whatever the
 upstream sent, so cross-origin `fetch` works without a dev proxy — which is what
@@ -101,37 +144,39 @@ lets the repo stay free of `vite.config.js`.
 
 ## The final step
 
-`steps/final/` is the finished sample — the Hiroshima citizen hazard-report map. It
-departs from the conventions above in three ways, all deliberate:
+`steps/final/` is the finished sample — the Hiroshima citizen hazard-report map.
+It follows the same shape as every step folder; the only difference is that it
+is the target rather than a step, so it is named `final` and not `NN-name`. It
+is step 07 plus photo upload and polish.
 
-| Deviation | Why |
-| --- | --- |
-| Folder is `final`, not `NN-name` | It is the target, not a step. Steps `02`…`NN` get derived from it. |
-| `src/` holds several modules, not one `main.js` | ~600 lines of JS. Split by concern: `config.js`, `cms.js`, `map.js`, `ui.js`, and `main.js` for the wiring. |
-| No `style.css` | Tailwind covers every rule the app needs, including the runtime-built Leaflet markers. |
-| Tailwind and Leaflet come from a CDN | Keeps `package.json` free of frontend runtime dependencies and keeps the repo free of a Tailwind config. |
-
-Both CDN tags sit in `index.html`. Leaflet is a classic `<script>`, so `L` is a
-global by the time the deferred module in `src/` runs — that is why `map.js`
-starts with `const { L } = window;`.
+Tailwind and Leaflet come from a CDN, which keeps `package.json` free of
+frontend runtime dependencies and the repo free of a Tailwind config. Both tags
+sit in the shell `index.html`. Leaflet is a classic `<script>`, so `L` is a
+global by the time the deferred module in `src/` runs — that is why the map
+section starts with `const { L } = window;`.
 
 There is no CSS file. Tailwind's browser build watches the DOM for new classes,
-so the Leaflet `divIcon` markers get utility classes too, even though `map.js`
-builds their HTML at runtime — see `MARKER_CLASS` and `PICK_MARKER_CLASS` at the
-top of that file. Marker colors come from `CATEGORIES` in `config.js` as an
-inline style, so a new category is a one-line change in one file.
+so the Leaflet `divIcon` markers get utility classes too, even though their HTML
+is built at runtime — see `MARKER_CLASS` and `PICK_MARKER_CLASS`. Marker colors
+come from `CATEGORIES` in `common/categories.js` as an inline style, so a new
+category is a one-line change in one file.
 
 Keep it that way: if a rule looks like it needs a stylesheet, check for a
 utility first. `animate-ping` replaced a hand-written pulse keyframe here.
 
 Anything read out of the CMS goes through `escapeHtml()` before it reaches
-`innerHTML`. `normalizeItem()` in `cms.js` deliberately accepts more than one
-response shape — fields as an array or as plain properties, geometry as GeoJSON
-or as a JSON string — so a model whose schema differs slightly still renders.
+`innerHTML`. `normalizeItem()` deliberately accepts more than one response shape
+— fields as an array or as plain properties — and `common/parse.js` does the
+same for geometry and assets, so a model whose schema differs slightly still
+renders instead of producing an empty map.
 
 ## Placeholders
 
-`workspace/` files carry a `// TODO: workshop code goes here.` comment and
-render a visible hint. Keep the workspace obviously alive but empty — an
-attendee should be able to tell at a glance that their setup works and that the
-blank page is on purpose.
+`workspace/src/main.js` carries one `// TODO (step NN): …` line per remaining
+step, and renders the parts of the panel that need no data so the page is
+visibly working. Keep the workspace obviously alive but empty — an attendee
+should be able to tell at a glance that their setup works and that the empty map
+is on purpose.
+
+The map area is deliberately left blank rather than initialised, so it cannot be
+mistaken for the grey-tiles failure described above.

@@ -9,7 +9,7 @@ Living document. Sections marked **TBD** are still open.
 | Event                       | FOSS4G 2026                     |
 | Location                    | Hiroshima, Japan                |
 | Topic                       | Re:Earth CMS frontend + backend |
-| Audience                    | TBD                             |
+| Audience                    | FOSS4G attendees — strong on geodata, light on JavaScript |
 | Duration                    | 3hr                             |
 | Prerequisites for attendees | Basic HTML / CSS / JavaScript   |
 
@@ -25,8 +25,8 @@ the internal `kobe-map-server` demo, whose frontend was one 2200-line
 - A list tab with category filters, a detail modal, and a stats panel.
 - Demo data when the CMS is unreachable, so the sample runs offline.
 
-The finished app lives in `frontend/steps/final`. Steps `02`…`NN` get derived
-from it by working backwards.
+The finished app lives in `frontend/steps/final`. Steps `03`…`07` were derived
+from it by working backwards, each one a superset of the step before it.
 
 The backend keeps its single role: an auth injector. The frontend calls the
 token-bearing CMS endpoints directly through it, so the integration token never
@@ -34,20 +34,35 @@ reaches the browser. The read is not one of them — the public API needs no aut
 so the browser calls the CMS itself and the map works with no backend running.
 The workspace and project aliases and the model key do sit in the frontend —
 they are not secrets, and saying so is part of the workshop. Both APIs take them,
-so `config.js` carries one set of identifiers rather than one per path.
+so the top of `src/main.js` carries one set of identifiers rather than one per
+path.
 
 ## Steps
 
-| Step | Frontend folder           | Backend folder      | Content                                                                     |
-| ---- | ------------------------- | ------------------- | --------------------------------------------------------------------------- |
-| 01   | `frontend/steps/01-hello` | —                   | Setup check — module import, CSS import, hot reload                         |
-| 02   | —                         | —                   | TBD                                                                         |
-| 03   | —                         | —                   | TBD                                                                         |
-| …    | —                         | —                   | TBD                                                                         |
-| —    | `frontend/steps/final`    | `backend/server.js` | The finished app. Not a step of its own — the target the steps build toward |
+| Step | Frontend folder             | Backend              | Content                                                                     | Min |
+| ---- | --------------------------- | -------------------- | --------------------------------------------------------------------------- | --- |
+| —    | —                           | —                    | Intro: what Re:Earth CMS is, demo of the finished app                       | 12  |
+| 01   | `frontend/steps/01-hello`   | —                    | Setup check — module import, CSS import, hot reload                         | 15  |
+| 02   | — (`docs/step-02-cms.md`)   | —                    | Build the CMS project: workspace, model, items, integration token           | 30  |
+| —    | —                           | —                    | Break, doubling as catch-up buffer                                          | 10  |
+| 03   | `frontend/steps/03-map`     | —                    | Leaflet, GSI pale tiles, the control buttons. No CMS yet                    | 20  |
+| 04   | `frontend/steps/04-read`    | —                    | Public API read + demo fallback; raw response on screen                     | 20  |
+| 05   | `frontend/steps/05-markers` | —                    | Normalise the response into markers; list, filters and stats come alive     | 25  |
+| 06   | —                           | `backend/server.js`  | Token into `.env`, run the proxy, read it, verify one authenticated call    | 15  |
+| 07   | `frontend/steps/07-report`  | `backend/server.js`  | Click to pick a location, then POST the item through the proxy              | 30  |
+| —    | `frontend/steps/final`      | `backend/server.js`  | Wrap-up: photos, and where to go next. Not a step — the target              | 8   |
+| 08   | `frontend/steps/final`      | `backend/server.js`  | Bonus for fast finishers: photo upload via the assets endpoint              | —   |
 
 Attendees code in `frontend/workspace/`; each `steps/NN-*` folder is an
 independently runnable snapshot they can jump to if they fall behind.
+
+Steps 02 and 06 have no frontend folder — 02 happens entirely in the CMS
+interface and has a handout instead, and 06 touches only `backend/`.
+
+Typing load, counted as code lines added over the previous step, comments
+excluded: 03 adds 49, 04 adds 44, 05 adds 90, 07 adds 112. The two early steps
+are deliberately lighter than their slots need, because setup is what overruns,
+and they are the only slack left once the break is spent.
 
 The backend is currently a single `backend/server.js` with no `workspace/` or
 `steps/` folders. If backend steps are added, the numbering will line up with the
@@ -72,8 +87,16 @@ needs both sides.
 | Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                               | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too |
 | Map library           | Leaflet 1.9 via the unpkg CDN                                                                         | Smaller and simpler to read aloud than MapLibre; keeps `package.json` free of frontend runtime deps                                         |
 | Config                | No `vite.config.js`                                                                                   | Nothing to explain                                                                                                                          |
+| Given code            | Everything an attendee never edits lives in `frontend/common/` and is imported, not copied            | One source of truth for the markup, the rendering, the taxonomy and the demo data; a fix lands once instead of once per folder              |
+| Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step, no symlink and still no `vite.config.js`   |
+| Step code             | One `src/main.js` per folder, each step a superset of the one before                                  | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room      |
+| Typed vs given        | Attendees write the config, the map, the CMS read and write, and the wiring; not the markup or the DOM rendering | ~340 code lines of typing across the session, spent on the parts that are actually about the CMS                                   |
 
 Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks.
+
+Photo upload and the list/filter/stats/modal UI are in `final` but are not
+hands-on steps: the first is the bonus step 08, the second teaches no CMS
+concept and ships pre-built in `common/ui.js`.
 
 ## Open questions
 
@@ -91,10 +114,23 @@ Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks
       list? The proxy used to force it in, so the direct read has never been
       exercised from a browser. If it does not, reads have to go back through the
       injector — a `vite.config.js` dev proxy is ruled out.
-- [ ] Which Re:Earth CMS project do attendees use? A Hiroshima project still has
-      to be created. Until the aliases and the model key in
-      `frontend/steps/final/src/config.js` point at a real project, the app runs
-      on demo data.
-- [ ] How many steps, and how long is each?
+- [x] How many steps, and how long is each? — see *Steps*. Seven, plus a bonus.
+- [ ] Which Re:Earth CMS project do attendees use? Each builds their own in step
+      02; a presenter-owned Hiroshima project is still needed as the fallback for
+      anyone whose setup breaks. Its aliases are literal `TBD` in
+      `docs/step-02-cms.md`. `frontend/steps/final` still points at
+      `aaaaa-yhwlvy` / `workshop`, and steps 03–07 ship placeholder aliases, so
+      everything runs on demo data until this lands.
 - [ ] Does the demo model's schema match the field keys and types in
-      `toApiFields()` (`cms.js`)? Untested against a live project.
+      `toApiFields()`? Untested against a live project. The field table in
+      `docs/step-02-cms.md` is derived from the code, not from a model anyone has
+      built, so the handout is only as right as that assumption.
+- [ ] Which CMS instance? The steps read from `api.cms.test.reearth.dev` while
+      `backend/env.example` targets `api.cms.reearth.io`, so as shipped the read
+      and write halves point at different instances. This bites in step 06.
+- [ ] The CMS-interface navigation in `docs/step-02-cms.md` is written in generic
+      terms because it has not been walked through against the live instance.
+      Needs a pass during the dry run.
+- [x] Does Vite serve `frontend/common/` from a step folder with no
+      `vite.config.js`? — yes, ES-module imports and `layout.html?raw` alike, in
+      dev via `/@fs` and inlined at build time.
