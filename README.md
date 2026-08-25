@@ -94,8 +94,7 @@ You write in exactly one file all session:
 ```txt
 frontend/workspace/
 ├─ index.html      a ~20-line shell you never touch
-└─ src/
-   └─ main.js      ← everything you write goes here
+└─ main.js         ← everything you write goes here
 ```
 
 The markup, the DOM rendering, the category list and the offline demo data live
@@ -111,7 +110,7 @@ npm run step:web -- frontend/steps/final
 ```
 
 To point any folder at a real CMS project, fill in the workspace and project
-aliases and the model key at the **top of its `src/main.js`** — the read path and
+aliases and the model key at the **top of its `main.js`** — the read path and
 the write path share that one set of identifiers. The workshop textbook walks
 through creating the project and finding them. Until you do — or whenever the CMS
 is unreachable — the app falls back to demo data and says so in the header.
@@ -138,7 +137,7 @@ the map fills with real data with no backend running at all; the backend is only
 needed to submit a report.
 
 Point `TARGET_URL` at the same CMS host the frontend reads from — the value at
-the top of your `src/main.js`. If the two disagree you will read from one
+the top of your `main.js`. If the two disagree you will read from one
 instance and write to another, which fails in a confusing way.
 
 It is configured entirely through `backend/.env`:

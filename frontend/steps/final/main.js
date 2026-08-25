@@ -6,11 +6,11 @@
 // the markup, the rendering, the parsing helpers and the demo data — come from
 // frontend/common.
 
-import LAYOUT from "../../../common/layout.html?raw";
-import { categoryOf, MAX_PHOTOS } from "../../../common/categories.js";
-import { DEMO_REPORTS } from "../../../common/demo-reports.js";
-import { readPoint, toPhotoUrls } from "../../../common/parse.js";
-import * as ui from "../../../common/ui.js";
+import LAYOUT from "../../common/layout.html?raw";
+import { categoryOf, MAX_PHOTOS } from "../../common/categories.js";
+import { DEMO_REPORTS } from "../../common/demo-reports.js";
+import { readPoint, toPhotoUrls } from "../../common/parse.js";
+import * as ui from "../../common/ui.js";
 
 // The markup has to be in the DOM before anything looks an element up, so this
 // runs before everything else.

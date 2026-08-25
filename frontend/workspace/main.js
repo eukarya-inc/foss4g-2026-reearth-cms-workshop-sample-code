@@ -8,8 +8,8 @@
 // If you fall behind, every step has a finished copy you can run instead:
 //   npm run step:web -- frontend/steps/02-map
 
-import LAYOUT from "../../common/layout.html?raw";
-import * as ui from "../../common/ui.js";
+import LAYOUT from "../common/layout.html?raw";
+import * as ui from "../common/ui.js";
 
 // The markup has to be in the DOM before anything looks an element up, so this
 // runs before everything else.

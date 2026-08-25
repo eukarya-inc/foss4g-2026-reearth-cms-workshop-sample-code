@@ -15,19 +15,18 @@ be read top to bottom without jumping around.
 | `steps/NN-name/` | Reference snapshot for one step. Used to catch up or compare.  |
 | `steps/final/`   | The finished app the steps build toward. See *The final step*. |
 
-Every folder except `steps/01-hello/` has the same shape — a shell `index.html`
-plus a single `src/main.js`:
+Every folder has the same shape — a shell `index.html` next to a single
+`main.js`, with no `src/` in between:
 
 ```txt
 <folder>/
 ├─ index.html      ~20-line shell: CDN tags, <div id="app">, the module script
-└─ src/
-   └─ main.js      all of this folder's JavaScript
+└─ main.js         all of this folder's JavaScript
 ```
 
-`steps/01-hello/` predates this and keeps its own `main.js` + `style.css`; it is
-a setup check, and the Vite CSS import is the point of it. Nothing else has a
-`style.css` — Tailwind from the CDN covers every rule the app needs.
+`steps/01-hello/` is the one folder with a second file, `style.css`, because the
+Vite CSS import is the point of that setup check. Nothing else has one —
+Tailwind from the CDN covers every rule the app needs.
 
 ## What lives in `common/`
 
@@ -152,7 +151,7 @@ is step 05 plus photo upload and polish.
 Tailwind and Leaflet come from a CDN, which keeps `package.json` free of
 frontend runtime dependencies and the repo free of a Tailwind config. Both tags
 sit in the shell `index.html`. Leaflet is a classic `<script>`, so `L` is a
-global by the time the deferred module in `src/` runs — that is why the map
+global by the time the deferred module runs — that is why the map
 section starts with `const { L } = window;`.
 
 There is no CSS file. Tailwind's browser build watches the DOM for new classes,
@@ -172,7 +171,7 @@ renders instead of producing an empty map.
 
 ## Placeholders
 
-`workspace/src/main.js` carries one `// TODO (step NN): …` line per remaining
+`workspace/main.js` carries one `// TODO (step NN): …` line per remaining
 step, and renders the parts of the panel that need no data so the page is
 visibly working. Keep the workspace obviously alive but empty — an attendee
 should be able to tell at a glance that their setup works and that the empty map

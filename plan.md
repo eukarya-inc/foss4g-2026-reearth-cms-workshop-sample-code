@@ -25,7 +25,7 @@ the internal `kobe-map-server` demo, whose frontend was one 2200-line
 - A list tab with category filters, a detail modal, and a stats panel.
 - Demo data when the CMS is unreachable, so the sample runs offline.
 
-The finished app lives in `frontend/steps/final`. Steps `03`…`07` were derived
+The finished app lives in `frontend/steps/final`. Steps `02`…`05` were derived
 from it by working backwards, each one a superset of the step before it.
 
 The backend keeps its single role: an auth injector. The frontend calls the
@@ -34,7 +34,7 @@ reaches the browser. The read is not one of them — the public API needs no aut
 so the browser calls the CMS itself and the map works with no backend running.
 The workspace and project aliases and the model key do sit in the frontend —
 they are not secrets, and saying so is part of the workshop. Both APIs take them,
-so the top of `src/main.js` carries one set of identifiers rather than one per
+so the top of `main.js` carries one set of identifiers rather than one per
 path.
 
 ## Steps
@@ -91,7 +91,7 @@ folders, and needs none — it is read, not written, and only step 05 touches it
 | Config                | No `vite.config.js`                                                                                   | Nothing to explain                                                                                                                          |
 | Given code            | Everything an attendee never edits lives in `frontend/common/` and is imported, not copied            | One source of truth for the markup, the rendering, the taxonomy and the demo data; a fix lands once instead of once per folder              |
 | Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step, no symlink and still no `vite.config.js`   |
-| Step code             | One `src/main.js` per folder, each step a superset of the one before                                  | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room      |
+| Step code             | One `main.js` per folder, no `src/`, each step a superset of the one before                                  | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room      |
 | Typed vs given        | Attendees write the config, the map, the CMS read and write, and the wiring; not the markup or the DOM rendering | ~340 code lines of typing across the session, spent on the parts that are actually about the CMS                                   |
 
 Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks.
