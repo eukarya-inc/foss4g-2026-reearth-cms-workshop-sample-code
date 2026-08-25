@@ -3,12 +3,12 @@
 **30 minutes. No code in this step** — everything happens in the Re:Earth CMS web
 interface. You come out of it with four things the rest of the workshop needs:
 
-| What | Example | Where it goes later |
-| --- | --- | --- |
-| Workspace alias | `foss4g-abc123` | top of `src/main.js` |
-| Project alias | `hiroshima-hazards` | top of `src/main.js` |
-| Model key | `hazard_reports` | top of `src/main.js` |
-| Integration token | `secret_…` | `backend/.env`, never in `src/` |
+| What              | Example             | Where it goes later             |
+| ----------------- | ------------------- | ------------------------------- |
+| Workspace alias   | `foss4g-abc123`     | top of `src/main.js`            |
+| Project alias     | `hiroshima-hazards` | top of `src/main.js`            |
+| Model key         | `hazard_reports`    | top of `src/main.js`            |
+| Integration token | `secret_…`          | `backend/.env`, never in `src/` |
 
 Write the first three down somewhere you can copy from. The token you will paste
 straight into `backend/.env` in step 06.
@@ -52,14 +52,14 @@ Create a model with the key **`hazard_reports`**. Display name is up to you.
 Six fields. Key and type both matter — the key is what the API sends, and the
 sample code sends exactly these:
 
-| Key | Type | Notes |
-| --- | --- | --- |
-| `title` | Text | The one required field in the form |
-| `category` | Select | Options, exactly: `road`, `facility`, `disaster`, `other` |
-| `description` | Text Area | |
-| `location` | Geometry Object | Point |
-| `status` | Select | Options, exactly: `pending`, `approved`, `public`, `resolved` |
-| `photos` | Asset | Allow multiple. Only used by the bonus step |
+| Key           | Type            | Notes                                                         |
+| ------------- | --------------- | ------------------------------------------------------------- |
+| `title`       | Text            | The one required field in the form                            |
+| `category`    | Select          | Options, exactly: `road`, `facility`, `disaster`, `other`     |
+| `description` | Text Area       |                                                               |
+| `location`    | Geometry Object | Point                                                         |
+| `status`      | Select          | Options, exactly: `pending`, `approved`, `public`, `resolved` |
+| `photos`      | Asset           | Allow multiple. Only used by the bonus step                   |
 
 The four `category` values are the ones in `frontend/common/categories.js`. If
 they differ, items come back with a category the map does not recognise and
