@@ -58,7 +58,7 @@ automatically too, thanks to `node --watch`.
 own code, and you can jump straight to the one the room is on:
 
 ```bash
-npm run step:web -- frontend/steps/03-map
+npm run step:web -- frontend/steps/02-map
 ```
 
 Other commands:
@@ -79,7 +79,6 @@ Other commands:
 | `frontend/`           | Browser code — Vite, HTML, JavaScript.         |
 | `backend/server.js`   | The auth-injecting proxy.                      |
 | `backend/env.example` | Template for `backend/.env`.                   |
-| `docs/`               | Handouts for the steps that have no code.      |
 | `plan.md`             | Workshop outline and open questions.           |
 
 The frontend has three folders:
@@ -105,7 +104,7 @@ no HTML to write: Tailwind and Leaflet come from a CDN, so there is nothing to
 install either.
 
 `frontend/steps/final` is the finished app — the Hiroshima citizen hazard-report
-map, which is step 07 plus photo upload:
+map, which is step 05 plus photo upload:
 
 ```bash
 npm run step:web -- frontend/steps/final
@@ -113,7 +112,7 @@ npm run step:web -- frontend/steps/final
 
 To point any folder at a real CMS project, fill in the workspace and project
 aliases and the model key at the **top of its `src/main.js`** — the read path and
-the write path share that one set of identifiers. `docs/step-02-cms.md` walks
+the write path share that one set of identifiers. The workshop textbook walks
 through creating the project and finding them. Until you do — or whenever the CMS
 is unreachable — the app falls back to demo data and says so in the header.
 
@@ -176,13 +175,15 @@ accepts.
 | Step | Where                       | Content                                            |
 | ---- | --------------------------- | -------------------------------------------------- |
 | 01   | `frontend/steps/01-hello`   | Setup check                                        |
-| 02   | `docs/step-02-cms.md`       | Build your CMS project — no code                   |
-| 03   | `frontend/steps/03-map`     | Leaflet map and tiles                              |
-| 04   | `frontend/steps/04-read`    | Read from the CMS public API                       |
-| 05   | `frontend/steps/05-markers` | Reports become markers                             |
-| 06   | `backend/server.js`         | The proxy and the token — no frontend code         |
-| 07   | `frontend/steps/07-report`  | Send a new report back to the CMS                  |
-| —    | `frontend/steps/final`      | The finished app, step 07 plus photo upload        |
+| 02   | `frontend/steps/02-map`     | Leaflet map and tiles                              |
+| 03   | `frontend/steps/03-read`    | Read from the CMS public API                       |
+| 04   | `frontend/steps/04-markers` | Reports become markers                             |
+| 05   | `frontend/steps/05-report`  | The proxy and the token, then send a report        |
+| —    | `frontend/steps/final`      | The finished app, step 05 plus photo upload        |
+
+Building the CMS project itself — workspace, model, items, integration token —
+is covered by the workshop textbook, not by this repo. You need it done before
+step 03, which is the first step that reads from your project.
 
 Timings and the reasoning behind the split are in `plan.md`.
 

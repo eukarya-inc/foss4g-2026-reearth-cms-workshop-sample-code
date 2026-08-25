@@ -147,7 +147,7 @@ lets the repo stay free of `vite.config.js`.
 `steps/final/` is the finished sample — the Hiroshima citizen hazard-report map.
 It follows the same shape as every step folder; the only difference is that it
 is the target rather than a step, so it is named `final` and not `NN-name`. It
-is step 07 plus photo upload and polish.
+is step 05 plus photo upload and polish.
 
 Tailwind and Leaflet come from a CDN, which keeps `package.json` free of
 frontend runtime dependencies and the repo free of a Tailwind config. Both tags

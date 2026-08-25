@@ -1,12 +1,9 @@
-// Step 04 — reading from the CMS.
+// Step 02 — the map.
 //
-// The public API needs no auth, so the browser calls the CMS directly: no
-// backend, no token, nothing to start. This step puts the raw response on
-// screen so you can see the shape the CMS actually returns — step 05 turns it
-// into markers.
+// Leaflet, the GSI pale tiles and the control buttons. No CMS yet: this step is
+// only about getting something on screen you can navigate.
 
 import LAYOUT from "../../../common/layout.html?raw";
-import { DEMO_REPORTS } from "../../../common/demo-reports.js";
 import * as ui from "../../../common/ui.js";
 
 // The markup has to be in the DOM before anything looks an element up, so this
@@ -14,21 +11,8 @@ import * as ui from "../../../common/ui.js";
 document.getElementById("app").innerHTML = LAYOUT;
 
 // ---------------------------------------------------------------------------
-// Configuration — the three identifiers are the ones you wrote down in step 02
+// Configuration
 // ---------------------------------------------------------------------------
-
-// The aliases you gave the workspace and the project, and the key you gave the
-// model. None of this is a secret: the public API is public, and these end up
-// in the browser either way.
-const WORKSPACE_ALIAS = "your-workspace-alias";
-const PROJECT_ALIAS = "your-project-alias";
-const MODEL_KEY = "hazard_reports";
-
-// Read path — the CMS public API needs no auth, so the browser calls the CMS
-// directly and the backend is not involved at all.
-const CMS_BASE_URL = "https://api.cms.test.reearth.dev";
-
-const PUBLIC_ITEMS_URL = `${CMS_BASE_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
 
 // Map defaults — central Hiroshima. Zoom 12 keeps the hillside wards in the
 // north and the port in the south on screen together.
@@ -90,70 +74,20 @@ const locateMe = (onError) => {
 };
 
 // ---------------------------------------------------------------------------
-// Talking to the CMS
-// ---------------------------------------------------------------------------
-
-// The caller passes a full URL, because later on the two halves of the app talk
-// to two different origins: reads go to the CMS itself, writes go to the proxy.
-const request = async (url, options) => {
-  const response = await fetch(url, options);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} ${response.statusText}`);
-  }
-  return response.json();
-};
-
-// Straight to the CMS — no backend, no token. If the read fails for any reason,
-// including the venue Wi-Fi giving out, fall back to the demo reports so the
-// rest of the workshop still works.
-const listReports = async () => {
-  try {
-    const data = await request(PUBLIC_ITEMS_URL, {
-      headers: { Accept: "application/json" },
-    });
-    return { data, isLive: true };
-  } catch (error) {
-    console.warn("[cms] read failed, using demo data:", error.message);
-    return { data: DEMO_REPORTS, isLive: false };
-  }
-};
-
-const load = async () => {
-  const { data, isLive } = await listReports();
-
-  ui.setConnection(isLive);
-  showRaw(data);
-};
-
-// Scaffolding for this step only. Seeing the real response is the point here —
-// notice how the fields come back, and how the location is encoded. Step 05
-// deletes this and draws markers instead.
-const showRaw = (data) => {
-  // Refreshing calls this again, so replace the previous dump rather than
-  // stacking a second one on top of it.
-  document.getElementById("raw-response")?.remove();
-
-  const pre = document.createElement("pre");
-  pre.id = "raw-response";
-  pre.className =
-    "fixed bottom-4 right-4 z-[3000] max-h-[60vh] w-[420px] overflow-auto " +
-    "rounded-xl bg-slate-900 p-4 text-[11px] leading-relaxed text-emerald-300 shadow-lg";
-  pre.textContent = JSON.stringify(data, null, 2);
-  document.body.append(pre);
-};
-
-// ---------------------------------------------------------------------------
 // Wiring
 // ---------------------------------------------------------------------------
 
 // The parts of the panel that need no data. The two callbacks stay empty until
-// step 07, when the form starts using them.
+// step 05, when the form starts using them.
 ui.renderCategoryOptions(() => {});
 ui.renderFilterChips(() => {});
 ui.markFilter("all");
 ui.renderLegend();
 ui.resetLocation();
 ui.showTab("report");
+
+// No CMS data yet, so the header badge says so.
+ui.setConnection(false);
 
 initMap();
 
@@ -168,11 +102,6 @@ document.getElementById("locate").addEventListener("click", () => {
   locateMe(() => ui.showToast("Could not get your location.", "⚠️"));
 });
 
-document.getElementById("refresh").addEventListener("click", () => {
-  ui.showToast("Refreshing…", "🔄");
-  load();
-});
-
 // The panel is an overlay, so folding it never resizes the map — nothing to
 // tell Leaflet about.
 let sidebarOpen = true;
@@ -181,7 +110,6 @@ document.getElementById("sidebar-toggle").addEventListener("click", () => {
   ui.setSidebar(sidebarOpen);
 });
 
-load();
-
-// TODO (step 05): turn those reports into markers on the map.
-// TODO (step 07): send a new report back to the CMS through the proxy.
+// TODO (step 03): read the reports out of your own CMS project.
+// TODO (step 04): turn those reports into markers on the map.
+// TODO (step 05): send a new report back to the CMS through the proxy.

@@ -1,6 +1,6 @@
-// Step 05 — reports on the map.
+// Step 04 — reports on the map.
 //
-// The raw dump from step 04 goes away. Instead the response is normalised into
+// The raw dump from step 03 goes away. Instead the response is normalised into
 // one plain shape the rest of the app can use, and every report becomes a
 // marker. The list, the filter chips, the stats and the detail panel come from
 // frontend/common/ui.js and start working as soon as they are given data.
@@ -16,7 +16,7 @@ import * as ui from "../../../common/ui.js";
 document.getElementById("app").innerHTML = LAYOUT;
 
 // ---------------------------------------------------------------------------
-// Configuration — the three identifiers are the ones you wrote down in step 02
+// Configuration — the identifiers from the CMS project you set up
 // ---------------------------------------------------------------------------
 
 // The aliases you gave the workspace and the project, and the key you gave the
@@ -236,7 +236,7 @@ const load = async () => {
 // Wiring
 // ---------------------------------------------------------------------------
 
-// The category picker stays inert until step 07, when the form starts using it.
+// The category picker stays inert until step 05, when the form starts using it.
 ui.renderCategoryOptions(() => {});
 
 ui.renderFilterChips((filter) => {
@@ -282,4 +282,4 @@ document.getElementById("sidebar-toggle").addEventListener("click", () => {
 
 load();
 
-// TODO (step 07): send a new report back to the CMS through the proxy.
+// TODO (step 05): send a new report back to the CMS through the proxy.

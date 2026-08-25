@@ -6,7 +6,7 @@
 // `npm run dev:web` from the repo root and open http://localhost:5173.
 //
 // If you fall behind, every step has a finished copy you can run instead:
-//   npm run step:web -- frontend/steps/03-map
+//   npm run step:web -- frontend/steps/02-map
 
 import LAYOUT from "../../common/layout.html?raw";
 import * as ui from "../../common/ui.js";
@@ -16,7 +16,7 @@ import * as ui from "../../common/ui.js";
 document.getElementById("app").innerHTML = LAYOUT;
 
 // The parts of the panel that need no data can be drawn straight away. The two
-// callbacks stay empty until step 07, when the form starts using them.
+// callbacks stay empty until step 05, when the form starts using them.
 ui.renderCategoryOptions(() => {});
 ui.renderFilterChips(() => {});
 ui.markFilter("all");
@@ -27,9 +27,9 @@ ui.showTab("report");
 // No CMS data yet, so the header badge says so.
 ui.setConnection(false);
 
-// TODO (step 03): build the Leaflet map — centre, zoom and tile layer.
-// TODO (step 04): read the reports out of your own CMS project.
-// TODO (step 05): turn those reports into markers on the map.
-// TODO (step 07): send a new report back to the CMS through the proxy.
+// TODO (step 02): build the Leaflet map — centre, zoom and tile layer.
+// TODO (step 03): read the reports out of your own CMS project.
+// TODO (step 04): turn those reports into markers on the map.
+// TODO (step 05): send a new report back to the CMS through the proxy.
 
-ui.showToast("Workspace is running. Start with step 03.", "👋");
+ui.showToast("Workspace is running. Start with step 02.", "👋");

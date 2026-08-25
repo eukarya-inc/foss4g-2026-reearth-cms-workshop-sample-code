@@ -43,31 +43,33 @@ path.
 | ---- | --------------------------- | -------------------- | --------------------------------------------------------------------------- | --- |
 | —    | —                           | —                    | Intro: what Re:Earth CMS is, demo of the finished app                       | 12  |
 | 01   | `frontend/steps/01-hello`   | —                    | Setup check — module import, CSS import, hot reload                         | 15  |
-| 02   | — (`docs/step-02-cms.md`)   | —                    | Build the CMS project: workspace, model, items, integration token           | 30  |
+| —    | — (textbook)                | —                    | Build the CMS project: workspace, model, items, integration token           | 30  |
 | —    | —                           | —                    | Break, doubling as catch-up buffer                                          | 10  |
-| 03   | `frontend/steps/03-map`     | —                    | Leaflet, GSI pale tiles, the control buttons. No CMS yet                    | 20  |
-| 04   | `frontend/steps/04-read`    | —                    | Public API read + demo fallback; raw response on screen                     | 20  |
-| 05   | `frontend/steps/05-markers` | —                    | Normalise the response into markers; list, filters and stats come alive     | 25  |
-| 06   | —                           | `backend/server.js`  | Token into `.env`, run the proxy, read it, verify one authenticated call    | 15  |
-| 07   | `frontend/steps/07-report`  | `backend/server.js`  | Click to pick a location, then POST the item through the proxy              | 30  |
+| 02   | `frontend/steps/02-map`     | —                    | Leaflet, GSI pale tiles, the control buttons. No CMS yet                    | 20  |
+| 03   | `frontend/steps/03-read`    | —                    | Public API read + demo fallback; raw response on screen                     | 20  |
+| 04   | `frontend/steps/04-markers` | —                    | Normalise the response into markers; list, filters and stats come alive     | 25  |
+| 05   | `frontend/steps/05-report`  | `backend/server.js`  | Token into `.env`, run and read the proxy, then POST the item through it    | 45  |
 | —    | `frontend/steps/final`      | `backend/server.js`  | Wrap-up: photos, and where to go next. Not a step — the target              | 8   |
-| 08   | `frontend/steps/final`      | `backend/server.js`  | Bonus for fast finishers: photo upload via the assets endpoint              | —   |
+| —    | `frontend/steps/final`      | `backend/server.js`  | Bonus for fast finishers: photo upload via the assets endpoint              | —   |
 
 Attendees code in `frontend/workspace/`; each `steps/NN-*` folder is an
 independently runnable snapshot they can jump to if they fall behind.
 
-Steps 02 and 06 have no frontend folder — 02 happens entirely in the CMS
-interface and has a handout instead, and 06 touches only `backend/`.
+**Only the code steps are numbered, and they run continuously** — `frontend/steps/`
+reads `01 … 05` with no holes in it. The CMS setup is not a repo step because the
+textbook covers it, and the proxy is not a step of its own because it has no
+frontend folder; it opens step 05 instead. `final` is unnumbered: it is the
+target, not a step, and the photo-upload bonus builds on it.
 
 Typing load, counted as code lines added over the previous step, comments
-excluded: 03 adds 49, 04 adds 44, 05 adds 90, 07 adds 112. The two early steps
+excluded: 02 adds 49, 03 adds 44, 04 adds 90, 05 adds 112. The two early steps
 are deliberately lighter than their slots need, because setup is what overruns,
-and they are the only slack left once the break is spent.
+and they are the only slack left once the break is spent. Step 05 looks heaviest
+but is not: it has 45 minutes, and the first 15 are spent reading
+`backend/server.js` rather than typing.
 
-The backend is currently a single `backend/server.js` with no `workspace/` or
-`steps/` folders. If backend steps are added, the numbering will line up with the
-frontend — a given number means the same thing on both sides. Not every step
-needs both sides.
+The backend is a single `backend/server.js` with no `workspace/` or `steps/`
+folders, and needs none — it is read, not written, and only step 05 touches it.
 
 ## Setup decisions
 
@@ -95,8 +97,8 @@ needs both sides.
 Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks.
 
 Photo upload and the list/filter/stats/modal UI are in `final` but are not
-hands-on steps: the first is the bonus step 08, the second teaches no CMS
-concept and ships pre-built in `common/ui.js`.
+hands-on steps: the first is the bonus for fast finishers, the second teaches no
+CMS concept and ships pre-built in `common/ui.js`.
 
 ## Open questions
 
@@ -114,23 +116,22 @@ concept and ships pre-built in `common/ui.js`.
       list? The proxy used to force it in, so the direct read has never been
       exercised from a browser. If it does not, reads have to go back through the
       injector — a `vite.config.js` dev proxy is ruled out.
-- [x] How many steps, and how long is each? — see *Steps*. Seven, plus a bonus.
-- [ ] Which Re:Earth CMS project do attendees use? Each builds their own in step
-      02; a presenter-owned Hiroshima project is still needed as the fallback for
-      anyone whose setup breaks. Its aliases are literal `TBD` in
-      `docs/step-02-cms.md`. `frontend/steps/final` still points at
-      `aaaaa-yhwlvy` / `workshop`, and steps 03–07 ship placeholder aliases, so
+- [x] How many steps, and how long is each? — see *Steps*. Five, plus a bonus.
+- [ ] Which Re:Earth CMS project do attendees use? Each builds their own by
+      following the textbook; a presenter-owned Hiroshima project is still needed
+      as the fallback for anyone whose setup breaks, and its aliases have to be
+      given out somewhere. `frontend/steps/final` still points at
+      `aaaaa-yhwlvy` / `workshop`, and steps 03–05 ship placeholder aliases, so
       everything runs on demo data until this lands.
-- [ ] Does the demo model's schema match the field keys and types in
-      `toApiFields()`? Untested against a live project. The field table in
-      `docs/step-02-cms.md` is derived from the code, not from a model anyone has
-      built, so the handout is only as right as that assumption.
+- [ ] Does the model the textbook builds match the field keys and types in
+      `toApiFields()`? Untested against a live project. The code assumes
+      `title`/text, `category`/select, `description`/textArea,
+      `location`/geometryObject, `status`/select and `photos`/asset, and the four
+      category keys have to match `common/categories.js` or every marker comes
+      out grey. The textbook and the code have to be checked against each other.
 - [ ] Which CMS instance? The steps read from `api.cms.test.reearth.dev` while
       `backend/env.example` targets `api.cms.reearth.io`, so as shipped the read
-      and write halves point at different instances. This bites in step 06.
-- [ ] The CMS-interface navigation in `docs/step-02-cms.md` is written in generic
-      terms because it has not been walked through against the live instance.
-      Needs a pass during the dry run.
+      and write halves point at different instances. This bites in step 05.
 - [x] Does Vite serve `frontend/common/` from a step folder with no
       `vite.config.js`? — yes, ES-module imports and `layout.html?raw` alike, in
       dev via `/@fs` and inlined at build time.

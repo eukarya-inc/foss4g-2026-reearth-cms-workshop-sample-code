@@ -1,11 +1,18 @@
-// Step 07 — sending a report back to the CMS.
+// Step 05 — sending a report back to the CMS.
 //
-// Reading needed no auth, so it went straight to the CMS. Writing needs the
-// integration token, and the token must never reach the browser — so the write
-// goes to the proxy you started in step 06, which attaches it on the way out.
+// Reading needed no auth, so it went straight to the CMS and the backend was
+// never involved. Writing is different: it needs the integration token, and the
+// token must never reach the browser.
 //
-// Clicking the map picks the location, the form collects the rest, and the new
-// item shows up as a marker as soon as the list is re-read.
+// So this step starts on the server. Put your token in backend/.env, start the
+// proxy with `npm run dev:api`, and read backend/server.js — it is 57 lines, it
+// has no routes of its own, and all it does is forward every request upstream
+// with one header added. That is the whole trick: the browser sends no
+// credentials, and the proxy attaches them on the way out.
+//
+// Then the frontend half. Clicking the map picks the location, the form
+// collects the rest, and the new item shows up as a marker as soon as the list
+// is re-read.
 
 import LAYOUT from "../../../common/layout.html?raw";
 import { categoryOf } from "../../../common/categories.js";
@@ -18,7 +25,7 @@ import * as ui from "../../../common/ui.js";
 document.getElementById("app").innerHTML = LAYOUT;
 
 // ---------------------------------------------------------------------------
-// Configuration — the three identifiers are the ones you wrote down in step 02
+// Configuration — the identifiers from the CMS project you set up
 // ---------------------------------------------------------------------------
 
 // Both APIs take the aliases you gave the workspace and the project and the key
@@ -202,7 +209,7 @@ const createItem = (draft) =>
     body: JSON.stringify({ fields: toApiFields(draft) }),
   });
 
-// Keys and types have to match the CMS model schema you built in step 02. If
+// Keys and types have to match the CMS model schema from the textbook. If
 // your model differs, this is the only place to change.
 const toApiFields = (draft) => [
   { key: "title", type: "text", value: draft.title },
@@ -425,7 +432,7 @@ document.getElementById("sidebar-toggle").addEventListener("click", () => {
 
 load();
 
-// Bonus (step 08): attach photos. Upload each one to the assets endpoint
-// through the proxy first, then pass the returned ids to createItem as a
-// `photos` field of type `asset`. The sample images in images/ are there for
-// exactly this.
+// Bonus, if you have time: attach photos. Upload each one to the assets
+// endpoint through the proxy first, then pass the returned ids to createItem
+// as a `photos` field of type `asset`. The sample images in images/ are there
+// for exactly this.
