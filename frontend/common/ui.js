@@ -1,4 +1,4 @@
-import { CATEGORIES, categoryOf, STATUS_LABELS } from "./config.js";
+import { CATEGORIES, categoryOf, STATUS_LABELS } from "./categories.js";
 
 const $ = (id) => document.getElementById(id);
 
