@@ -1,35 +1,44 @@
-// Your workspace. You build the Hiroshima citizen hazard-report map here, one
-// step at a time, and everything you write goes in this one file.
+// Your workspace. Everything you write during the workshop goes in this file.
 //
-// The parts you never have to write are imported from frontend/common: the
-// markup, the rendering, the category list and the offline demo data. Run
-// `npm run dev:web` from the repo root and open http://localhost:5173.
+// The map, the side panel, the list, the filters and every button are already
+// built — they live in frontend/common and you never have to touch them. What
+// you write is the part that talks to the Re:Earth CMS: where your project is,
+// how to read reports out of it, and how to send a new one back.
+//
+// Getting started, from the repo root:
+//
+//   node -v            22 or newer
+//   npm install        once, and it covers the backend too
+//   npm run dev:web    then open http://localhost:5173
 //
 // If you fall behind, every step has a finished copy you can run instead:
-//   npm run step:web -- frontend/steps/01-map
+//   npm run step:web -- frontend/steps/01-connect
 
-import LAYOUT from "../common/layout.html?raw";
-import * as ui from "../common/ui.js";
+import { startApp } from "../common/app.js";
+import { DEMO_REPORTS } from "../common/demo-reports.js";
 
-// The markup has to be in the DOM before anything looks an element up, so this
-// runs before everything else.
-document.getElementById("app").innerHTML = LAYOUT;
+// ---------------------------------------------------------------------------
+// Your project
+// ---------------------------------------------------------------------------
 
-// The parts of the panel that need no data can be drawn straight away. The two
-// callbacks stay empty until step 04, when the form starts using them.
-ui.renderCategoryOptions(() => {});
-ui.renderFilterChips(() => {});
-ui.markFilter("all");
-ui.renderLegend();
-ui.resetLocation();
-ui.showTab("report");
+// TODO (step 01): the aliases and model key from your own CMS project.
+const WORKSPACE_ALIAS = "your-workspace-alias";
+const PROJECT_ALIAS = "your-project-alias";
+const MODEL_KEY = "hazard_reports";
 
-// No CMS data yet, so the header badge says so.
-ui.setConnection(false);
+const CMS_BASE_URL = "https://api.cms.test.reearth.dev";
 
-// TODO (step 01): build the Leaflet map — centre, zoom and tile layer.
-// TODO (step 02): read the reports out of your own CMS project.
-// TODO (step 03): turn those reports into markers on the map.
-// TODO (step 04): send a new report back to the CMS through the proxy.
+// ---------------------------------------------------------------------------
+// Talking to the CMS
+// ---------------------------------------------------------------------------
 
-ui.showToast("Workspace is running. Start with step 01.", "👋");
+// TODO (step 01): build the public read URL and fetch it.
+// TODO (step 02): turn the response into the shape the app expects.
+// TODO (step 03): put your token on the server and start the proxy.
+// TODO (step 04): send a new report back to the CMS.
+
+// Until you write the read, the app runs on the demo reports — which is why the
+// badge in the header says "Demo mode".
+const listReports = async () => ({ reports: DEMO_REPORTS, isLive: false });
+
+startApp({ listReports });

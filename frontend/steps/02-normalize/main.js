@@ -1,8 +1,9 @@
-// The finished sample — the Hiroshima citizen hazard-report map.
+// Step 02 — turning the response into reports.
 //
-// This is step 04 plus the photo bonus. Everything here is the CMS client: the
-// identifiers, the read, the asset upload and the write. The map, the panel and
-// the wiring are in frontend/common.
+// The raw dump goes away. The CMS describes an item its own way; the app wants
+// a flat object with a title, a category and a latitude/longitude. Converting
+// between the two is this step, and it is the only place in the app that knows
+// what the CMS response looks like.
 
 import { startApp } from "../../common/app.js";
 import { DEMO_REPORTS } from "../../common/demo-reports.js";
@@ -21,14 +22,6 @@ const MODEL_KEY = "hazard_reports";
 const CMS_BASE_URL = "https://api.cms.reearth.io";
 
 const PUBLIC_ITEMS_URL = `${CMS_BASE_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
-
-// Write path — the proxy on your machine, which attaches the token on the way
-// out. Same three identifiers, and note there is no `/p/` this time: this is
-// the authenticated API.
-const PROXY_BASE_URL = "http://localhost:8080";
-
-const ASSETS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/assets`;
-const ITEMS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/models/${MODEL_KEY}/items`;
 
 // ---------------------------------------------------------------------------
 // Talking to the CMS
@@ -55,58 +48,6 @@ const listReports = async () => {
     console.warn("[cms] read failed, using demo data:", error.message);
     return { reports: DEMO_REPORTS, isLive: false };
   }
-};
-
-// This one needs the token, so it goes to the proxy instead of the CMS. Notice
-// what is not here: no token, no Authorization header, no credentials of any
-// kind. The browser cannot leak what it never had.
-const createItem = (draft, assetIds) =>
-  request(`${PROXY_BASE_URL}${ITEMS_PATH}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ fields: toApiFields(draft, assetIds) }),
-  });
-
-// One POST per photo. The proxy has no routes of its own, so there is no batch
-// endpoint to call — and this needs the token too, so it goes the same way.
-const uploadAsset = async (file) => {
-  const body = new FormData();
-  body.append("file", file);
-  body.append("skipDecompression", "true");
-
-  const asset = await request(`${PROXY_BASE_URL}${ASSETS_PATH}`, {
-    method: "POST",
-    body,
-  });
-  return asset.id;
-};
-
-// The mirror image of normalizeItem. Keys and types have to match the model you
-// built in the CMS — if yours differs, this is the only place to change.
-const toApiFields = (draft, assetIds) => {
-  const fields = [
-    { key: "title", type: "text", value: draft.title },
-    { key: "category", type: "select", value: draft.category },
-    { key: "description", type: "textArea", value: draft.description },
-    {
-      key: "location",
-      type: "geometryObject",
-      // GeoJSON order is [longitude, latitude] — the opposite of Leaflet's.
-      value: JSON.stringify({
-        type: "Point",
-        coordinates: [draft.longitude, draft.latitude],
-      }),
-    },
-    { key: "status", type: "select", value: "pending" },
-  ];
-
-  // An empty asset array is rejected, so only send the field when there is
-  // something in it.
-  if (assetIds.length > 0) {
-    fields.push({ key: "photos", type: "asset", value: assetIds });
-  }
-
-  return fields;
 };
 
 // The public API wraps the items in `results`.
@@ -137,5 +78,8 @@ const normalizeItem = (item) => ({
 });
 
 // Hand the client to the app. It draws the markers, the list, the filters and
-// the stats, uploads each photo, then calls createItem with the asset ids.
-startApp({ listReports, createItem, uploadAsset });
+// the stats from whatever listReports returns.
+startApp({ listReports });
+
+// TODO (step 03): put your token on the server and start the proxy.
+// TODO (step 04): send a new report back to the CMS.

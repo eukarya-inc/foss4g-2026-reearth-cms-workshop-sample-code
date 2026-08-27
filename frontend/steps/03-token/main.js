@@ -1,8 +1,18 @@
-// The finished sample — the Hiroshima citizen hazard-report map.
+// Step 03 — the token, and the proxy that holds it.
 //
-// This is step 04 plus the photo bonus. Everything here is the CMS client: the
-// identifiers, the read, the asset upload and the write. The map, the panel and
-// the wiring are in frontend/common.
+// Reading was public, so the browser called the CMS directly. Writing needs
+// your integration token — and anything the browser holds, the user holds.
+//
+// So the token goes on a small server on your own machine, and the browser asks
+// that server to make the write for it. This step is mostly not JavaScript:
+//
+//   cp backend/env.example backend/.env    then put your token in it
+//   npm run dev:api                        in a second terminal
+//
+// Then read backend/server.js. It is under 60 lines, it has no routes of its
+// own, and all it does is forward every request upstream with one header added.
+//
+// The only code here is the address of that server, ready for step 04.
 
 import { startApp } from "../../common/app.js";
 import { DEMO_REPORTS } from "../../common/demo-reports.js";
@@ -27,7 +37,6 @@ const PUBLIC_ITEMS_URL = `${CMS_BASE_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALI
 // the authenticated API.
 const PROXY_BASE_URL = "http://localhost:8080";
 
-const ASSETS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/assets`;
 const ITEMS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/models/${MODEL_KEY}/items`;
 
 // ---------------------------------------------------------------------------
@@ -55,58 +64,6 @@ const listReports = async () => {
     console.warn("[cms] read failed, using demo data:", error.message);
     return { reports: DEMO_REPORTS, isLive: false };
   }
-};
-
-// This one needs the token, so it goes to the proxy instead of the CMS. Notice
-// what is not here: no token, no Authorization header, no credentials of any
-// kind. The browser cannot leak what it never had.
-const createItem = (draft, assetIds) =>
-  request(`${PROXY_BASE_URL}${ITEMS_PATH}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ fields: toApiFields(draft, assetIds) }),
-  });
-
-// One POST per photo. The proxy has no routes of its own, so there is no batch
-// endpoint to call — and this needs the token too, so it goes the same way.
-const uploadAsset = async (file) => {
-  const body = new FormData();
-  body.append("file", file);
-  body.append("skipDecompression", "true");
-
-  const asset = await request(`${PROXY_BASE_URL}${ASSETS_PATH}`, {
-    method: "POST",
-    body,
-  });
-  return asset.id;
-};
-
-// The mirror image of normalizeItem. Keys and types have to match the model you
-// built in the CMS — if yours differs, this is the only place to change.
-const toApiFields = (draft, assetIds) => {
-  const fields = [
-    { key: "title", type: "text", value: draft.title },
-    { key: "category", type: "select", value: draft.category },
-    { key: "description", type: "textArea", value: draft.description },
-    {
-      key: "location",
-      type: "geometryObject",
-      // GeoJSON order is [longitude, latitude] — the opposite of Leaflet's.
-      value: JSON.stringify({
-        type: "Point",
-        coordinates: [draft.longitude, draft.latitude],
-      }),
-    },
-    { key: "status", type: "select", value: "pending" },
-  ];
-
-  // An empty asset array is rejected, so only send the field when there is
-  // something in it.
-  if (assetIds.length > 0) {
-    fields.push({ key: "photos", type: "asset", value: assetIds });
-  }
-
-  return fields;
 };
 
 // The public API wraps the items in `results`.
@@ -137,5 +94,7 @@ const normalizeItem = (item) => ({
 });
 
 // Hand the client to the app. It draws the markers, the list, the filters and
-// the stats, uploads each photo, then calls createItem with the asset ids.
-startApp({ listReports, createItem, uploadAsset });
+// the stats from whatever listReports returns.
+startApp({ listReports });
+
+// TODO (step 04): send a new report back to the CMS.

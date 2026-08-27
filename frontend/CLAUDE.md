@@ -29,34 +29,35 @@ needs. There are no exceptions to the shape above.
 
 ## What lives in `common/`
 
-| File               | Contents                                                     |
-| ------------------ | ------------------------------------------------------------ |
-| `layout.html`      | The app's markup. Injected into `#app`, not parsed from HTML. |
-| `ui.js`            | Every DOM rendering function. No data logic.                  |
-| `categories.js`    | `CATEGORIES`, `STATUS_LABELS`, `MAX_PHOTOS`, `categoryOf`.    |
-| `parse.js`         | `readPoint`, `toPhotoUrls` — tolerant field reading.          |
-| `demo-reports.js`  | The seven offline reports.                                    |
+| File               | Contents                                                       |
+| ------------------ | -------------------------------------------------------------- |
+| `layout.html`      | The app's markup. Injected into `#app`, not parsed from HTML.   |
+| `app.js`           | `startApp()` — state, rendering and every listener. Injects the layout. Also `showRaw()`, used by step 01. |
+| `map.js`           | All the Leaflet: `initMap`, `renderMarkers`, zoom, locate, the pick marker. |
+| `ui.js`            | Every DOM rendering function. No data logic.                    |
+| `categories.js`    | `CATEGORIES`, `STATUS_LABELS`, `MAX_PHOTOS`, `categoryOf`.      |
+| `demo-reports.js`  | The seven offline reports.                                      |
 
-A step's `main.js` starts by importing these and injecting the layout:
+**A step's `main.js` is a CMS client and nothing else.** It must not touch the
+DOM, Leaflet, or `ui.js`. It builds the URLs, reads, normalises and writes, then
+hands the result to `startApp({ listReports, createItem, uploadAsset })`.
+`createItem` and `uploadAsset` are optional — leaving one out just disables the
+part of the UI that needs it, which is what lets step 02 run before the write
+exists. If you find yourself adding `getElementById` to a step file, the code
+belongs in `common/app.js` instead.
 
-```js
-import LAYOUT from "../../../common/layout.html?raw";
-import * as ui from "../../../common/ui.js";
-
-document.getElementById("app").innerHTML = LAYOUT;
-```
-
-`?raw` is a Vite built-in, so this needs no config and no build step, and the
-markup stays a real `.html` file rather than a template literal. `workspace/`
-sits one directory shallower than a step, so its imports are `../../common/…`
-where a step's are `../../../common/…`. That import block is the only difference
-between an attendee's file and the matching step snapshot.
+`common/app.js` imports the layout with Vite's `?raw` and injects it, so a step
+file never does. `?raw` needs no config and no build step, and the markup stays a
+real `.html` file rather than a template literal. `workspace/` sits one directory
+shallower than a step, so its imports are `../common/…` where a step's are
+`../../common/…` — the only difference between an attendee's file and the
+matching step snapshot.
 
 **Anything that measures an element at startup must cope with being early.**
-Tailwind styles the injected markup a moment after `main.js` runs, so an element
-read immediately gives a pre-Tailwind size. `initMap()` observes its container
-and calls `map.invalidateSize()` for exactly this reason — without it the bottom
-of the map stays grey.
+Tailwind styles the injected markup a moment after it is added, so an element
+read immediately gives a pre-Tailwind size. `initMap()` in `common/map.js`
+observes its container and calls `map.invalidateSize()` for exactly this reason —
+without it the bottom of the map stays grey.
 
 ## Commands
 
@@ -145,7 +146,7 @@ lets the repo stay free of `vite.config.js`.
 `steps/final/` is the finished sample — the Hiroshima citizen hazard-report map.
 It follows the same shape as every step folder; the only difference is that it
 is the target rather than a step, so it is named `final` and not `NN-name`. It
-is step 04 plus photo upload and polish.
+is step 04 plus photo upload.
 
 Tailwind and Leaflet come from a CDN, which keeps `package.json` free of
 frontend runtime dependencies and the repo free of a Tailwind config. Both tags
@@ -163,18 +164,22 @@ Keep it that way: if a rule looks like it needs a stylesheet, check for a
 utility first. `animate-ping` replaced a hand-written pulse keyframe here.
 
 Anything read out of the CMS goes through `escapeHtml()` before it reaches
-`innerHTML`. `normalizeItem()` deliberately accepts more than one response shape
-— fields as an array or as plain properties — and `common/parse.js` does the
-same for geometry and assets, so a model whose schema differs slightly still
-renders instead of producing an empty map.
+`innerHTML`.
+
+`normalizeItem()` is written against the response the public API actually
+returns — items under `results`, fields as plain top-level properties, `location`
+as a GeoJSON object, timestamps prefixed with `$`. It used to accept several
+possible shapes; that was guesswork from before anyone had called the endpoint,
+and it hid a bug where `createdAt` was read instead of `$createdAt`. Keep it
+matched to the real response, and re-check it if the CMS version changes.
 
 ## Placeholders
 
-`workspace/main.js` carries one `// TODO (step NN): …` line per remaining
-step, and renders the parts of the panel that need no data so the page is
-visibly working. Keep the workspace obviously alive but empty — an attendee
-should be able to tell at a glance that their setup works and that the empty map
-is on purpose.
+`workspace/main.js` carries one `// TODO (step NN): …` line per step, and ships a
+`listReports` that returns the demo reports. The app therefore runs from the
+first minute — map, markers, list and all — with the header badge reading
+"Demo mode". Replacing that one function with a real read is step 01, and the
+badge flipping to "Live" is the proof it worked.
 
-The map area is deliberately left blank rather than initialised, so it cannot be
-mistaken for the grey-tiles failure described above.
+Keep it that way: the workspace should be visibly working and obviously
+unfinished at the same time.
