@@ -4,12 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev:web": "vite frontend/workspace",
+    "dev:web": "vite --config vite.config.js frontend/workspace",
     "dev:api": "node --watch backend/server.js",
-    "build:web": "vite build frontend/workspace",
-    "preview:web": "vite preview frontend/workspace",
-    "step:web": "vite",
-    "step:api": "node --watch"
+    "step:web": "vite --config vite.config.js"
   },
   "dependencies": {
     "dotenv": "16.4.5",

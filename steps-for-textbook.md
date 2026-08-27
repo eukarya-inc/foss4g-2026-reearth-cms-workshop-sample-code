@@ -88,10 +88,12 @@ const PROJECT_ALIAS = "foss4g-workshop";
 const MODEL_KEY = "hazard_reports";
 ```
 
+Just below those you will find `TARGET_URL` — the CMS host. Leave it alone; it already points at the right place, and you will meet it again in step 03 as the one setting the backend shares with you.
+
 Add below it:
 
 ```jsx
-const PUBLIC_ITEMS_URL = `${CMS_BASE_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
+const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
 ```
 
 The `/p/` is what makes this the **public** endpoint. It needs **no** authentication, which is why the browser can call the CMS directly and no backend has to be running yet.
@@ -159,7 +161,7 @@ Three things to find, because step 02 is written against exactly these:
 | ----------------------- | --------------------------------------------------------------------------------- |
 | `HTTP 404` in the panel | Public API not enabled on the project, items not published, or a typo in an alias |
 | `HTTP 401`              | You used the private endpoint — check the `/p/` is in `PUBLIC_ITEMS_URL`          |
-| `Failed to fetch`       | No network, or the host in `CMS_BASE_URL` is wrong                                |
+| `Failed to fetch`       | No network, or the host in `TARGET_URL` is wrong                                  |
 | `[]`                    | The read worked, but the project has no published items in it                     |
 
 ---
@@ -322,15 +324,24 @@ So the token goes on a small server on your own machine, and the browser asks th
 ## 3.2 Set it up
 
 ```bash
-cp backend/env.example backend/.env
+cp env.example .env
 ```
 
-Open `backend/.env` and fill in two values:
+Open `.env` at the repo root and fill in one value:
 
 - `AUTH_HEADER_VALUE` — `Bearer`  followed by your integration token.
-- `TARGET_URL` — the CMS host. **The same host as `CMS_BASE_URL` in your `main.js`.** If those two disagree you will read from one CMS and write to another, and the failure is thoroughly confusing.
+
+`TARGET_URL` is already correct, and you only ever set it once: **the frontend reads the same variable**, so the host you read from and the host you write to cannot disagree. Change it and both sides move together.
 
 `.env` is gitignored, so your token is never committed.
+
+### Wait — the token is in a file the frontend reads?
+
+Yes, and it still cannot leak. `vite.config.js` sets `envPrefix: "TARGET_"`, so only variables starting with `TARGET_` are ever put into the browser bundle. `AUTH_HEADER_VALUE` does not match, so it is simply not there.
+
+Prove it to yourself rather than taking it on trust — with the dev server running, open <http://localhost:5173/main.js> and search the page. You will find the CMS host. You will not find your token.
+
+That is the same lesson as 3.1 from the other direction: the browser gets what you deliberately give it, and nothing else.
 
 **In a second terminal**, leaving the first one running:
 
@@ -377,7 +388,7 @@ Same three identifiers, different endpoint — and note there is **no `/p/`** th
 
 | Symptom                                   | Cause                                                                             |
 | ----------------------------------------- | --------------------------------------------------------------------------------- |
-| The proxy exits at once                   | `TARGET_URL` or `AUTH_HEADER_VALUE` missing from `backend/.env`                   |
+| The proxy exits at once                   | `TARGET_URL` or `AUTH_HEADER_VALUE` missing from `.env`                           |
 | `EADDRINUSE`                              | Something else is on port 8080 — set `PORT` in `.env` and update `PROXY_BASE_URL` |
 | It reads `.env` but the token looks wrong | `AUTH_HEADER_VALUE` needs the `Bearer`  prefix, inside the quotes                 |
 
@@ -457,10 +468,9 @@ That last check is the one that matters. The report is not just on your screen; 
 
 | Symptom                                         | Cause                                                                       |
 | ----------------------------------------------- | --------------------------------------------------------------------------- |
-| `HTTP 401`                                      | No token in `backend/.env`, or the proxy was not restarted after editing it |
+| `HTTP 401`                                      | No token in `.env`, or the proxy was not restarted after editing it         |
 | `Failed to fetch`                               | The backend is not running — `npm run dev:api` in the second terminal       |
 | The report stays on screen with a warning toast | Deliberate: the write failed and your typing was kept. The console says why |
-| Reads work, writes give `404`                   | `TARGET_URL` and `CMS_BASE_URL` point at different CMS instances            |
 | `400` about fields                              | A key or type in `toApiFields` does not match your model                    |
 | The pin lands in the wrong hemisphere           | `coordinates` is `[longitude, latitude]`, not the other way round           |
 | Submit stays greyed out                         | One of the three requirements is missing — most often the map click         |

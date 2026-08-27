@@ -156,7 +156,7 @@ export const startApp = ({ listReports, createItem, uploadAsset }) => {
       ui.showToast(`Could not reach the CMS: ${error.message}`, "⚠️");
 
       // Keep the report on screen so your input is not lost — most likely the
-      // backend is not running, or backend/.env has no token in it yet.
+      // backend is not running, or .env has no token in it yet.
       state.reports.unshift({
         id: `local-${Date.now()}`,
         ...draft,

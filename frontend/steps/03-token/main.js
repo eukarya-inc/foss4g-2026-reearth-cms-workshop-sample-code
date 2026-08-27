@@ -6,8 +6,8 @@
 // So the token goes on a small server on your own machine, and the browser asks
 // that server to make the write for it. This step is mostly not JavaScript:
 //
-//   cp backend/env.example backend/.env    then put your token in it
-//   npm run dev:api                        in a second terminal
+//   cp env.example .env    then put your token in it
+//   npm run dev:api        in a second terminal
 //
 // Then read backend/server.js. It is under 60 lines, it has no routes of its
 // own, and all it does is forward every request upstream with one header added.
@@ -28,9 +28,11 @@ const WORKSPACE_ALIAS = "demo-workspace";
 const PROJECT_ALIAS = "foss4g-workshop";
 const MODEL_KEY = "hazard_reports";
 
-const CMS_BASE_URL = "https://api.cms.reearth.io";
+// The CMS host. `TARGET_URL` in the repo-root .env overrides it, so the host
+// you read from is always the host the proxy writes to.
+const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
 
-const PUBLIC_ITEMS_URL = `${CMS_BASE_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
+const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
 
 // Write path — the proxy on your machine, which attaches the token on the way
 // out. Same three identifiers, and note there is no `/p/` this time: this is

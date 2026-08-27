@@ -67,8 +67,6 @@ Always run from the repo root, never from inside `frontend/`:
 | ------------------------------------------- | ----------------------------------------------------- |
 | `npm run dev:web`                           | Dev server for `workspace/` — <http://localhost:5173> |
 | `npm run step:web -- frontend/steps/<name>` | Dev server for a reference step                       |
-| `npm run build:web`                         | Production build into `workspace/dist/`               |
-| `npm run preview:web`                       | Serve the production build                            |
 
 ## Style
 
@@ -90,7 +88,11 @@ Recorded in `plan.md` as deliberate decisions. Do not introduce:
 - Any framework (React, Vue, Svelte, …)
 - Linter or formatter config files
 - Tests or CI
-- `vite.config.js` — Vite's defaults are used as-is
+- A production build — there is no `build:web`; nothing in a 3-hour workshop
+  ships one, and every script kept is a script that has to be explained
+- Anything in `vite.config.js` beyond env loading. The file exists only to set
+  `envDir` and `envPrefix` (see *Talking to the backend*); Vite's defaults are
+  used for everything else, and no plugin, alias or dev proxy belongs in it
 - Runtime dependencies on the frontend — Vite stays a devDependency at the repo
   root. (The backend does have runtime deps; they live in the root
   `package.json` too, since the repo has exactly one manifest.)
@@ -107,8 +109,8 @@ change one, change them all.
 
 Everything else that is shared lives in `common/` and is imported. This does not
 break standalone runnability: `common/` is inside the repo workspace root, so
-Vite's default `server.fs.allow` serves it in dev and Rollup inlines it at build
-time, with no `vite.config.js` either way.
+Vite's default `server.fs.allow` serves it, with nothing in `vite.config.js`
+needed to make it work.
 
 Never deduplicate the shell with a symlink or a build step — a symlink breaks
 for attendees on Windows, and a build step is a thing to explain.
@@ -133,13 +135,42 @@ CMS API and attaches the token, so never send credentials from the browser.
 **Reads go straight to the CMS.** The public API
 (`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`) needs no auth, so routing
 it through the proxy would buy nothing and hide the point. The configuration
-block at the top of `main.js` names the two origins apart — `CMS_BASE_URL` for
-the public read, `PROXY_BASE_URL` for the token-bearing writes — and `request()`
+block at the top of `main.js` names the two origins apart — `TARGET_URL` for the
+public read, `PROXY_BASE_URL` for the token-bearing writes — and `request()`
 takes a full URL, so each call site says which one it is talking to.
 
 The proxy injects `Access-Control-Allow-Origin: *`, overriding whatever the
-upstream sent, so cross-origin `fetch` works without a dev proxy — which is what
-lets the repo stay free of `vite.config.js`.
+upstream sent, so cross-origin `fetch` works with no dev proxy in
+`vite.config.js`.
+
+## One `.env`, both sides
+
+`TARGET_URL` is the CMS host, and it is the **same variable** the proxy forwards
+to. It lives once, in the repo-root `.env`, so the host you read from cannot
+drift from the host you write to — a mismatch used to be silent, with reads
+succeeding against one instance and writes 404ing against another.
+
+The frontend reads it as:
+
+```js
+const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
+```
+
+Keep the fallback. Without it a missing `.env` yields `undefined/api/p/…`, and
+step folders have to stay runnable with no setup at all.
+
+Two things in `vite.config.js` make this work, and both are load-bearing:
+
+- `envDir: import.meta.dirname` — Vite resolves `envDir` against the *Vite
+  root*, and the roots sit at different depths (`frontend/workspace` vs
+  `frontend/steps/NN-name`), so a relative path cannot work.
+- `envPrefix: "TARGET_"` — only `TARGET_*` is injected into the bundle. This is
+  what makes it safe to keep `AUTH_HEADER_VALUE` in the very same file, and it
+  is worth demonstrating in step 03 rather than merely asserting.
+
+The config is not auto-discovered, because Vite looks for it in its root rather
+than the cwd. That is why every Vite script passes `--config vite.config.js`; a
+new script that forgets it silently loses env loading.
 
 ## The final step
 

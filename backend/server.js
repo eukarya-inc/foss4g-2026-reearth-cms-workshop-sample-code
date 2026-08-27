@@ -2,7 +2,7 @@ import {config} from 'dotenv';
 import express from 'express';
 import {createProxyMiddleware} from 'http-proxy-middleware';
 
-config({path: new URL('.env', import.meta.url)});
+config({path: new URL('../.env', import.meta.url)});
 
 const {
     PORT = 8080,

@@ -32,14 +32,18 @@ npm install
 One `npm install` at the repo root covers every folder — there is a single
 `package.json` and a single `package-lock.json` for the whole repo.
 
-The backend also needs an env file:
+Both sides read one env file at the repo root:
 
 ```bash
-cp backend/env.example backend/.env
+cp env.example .env
 ```
 
-Then edit `backend/.env` and put a real token in `AUTH_HEADER_VALUE`. It is
-gitignored, so it never gets committed.
+Then edit `.env` and put a real token in `AUTH_HEADER_VALUE`. It is gitignored,
+so it never gets committed.
+
+`TARGET_URL` in that file is the CMS host, and **both** sides read it — the
+frontend for the public read, the proxy for the authenticated write — so the
+two can never point at different instances.
 
 ## Running
 
@@ -69,8 +73,6 @@ Other commands:
 | `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit                   |
 | `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                                  |
 | `npm run step:api -- <file>`                | `node --watch` on any server entry point                                   |
-| `npm run build:web`                         | Production build of `frontend/workspace/` into `frontend/workspace/dist/` |
-| `npm run preview:web`                       | Serve the production build locally                                        |
 
 ## Structure
 
@@ -78,7 +80,8 @@ Other commands:
 | --------------------- | ---------------------------------------------- |
 | `frontend/`           | Browser code — Vite, HTML, JavaScript.         |
 | `backend/server.js`   | The auth-injecting proxy.                      |
-| `backend/env.example` | Template for `backend/.env`.                   |
+| `env.example`         | Template for `.env`, read by both sides.       |
+| `vite.config.js`      | Env loading only — `envDir` and `envPrefix`.   |
 | `plan.md`             | Workshop outline and open questions.           |
 
 The frontend has three folders:
@@ -124,7 +127,13 @@ is unreachable — the app falls back to demo data and says so in the header.
 The backend is a single file today — it has no `workspace/` or `steps/` folders.
 If backend steps are added later, they will mirror the frontend numbering.
 
-There is no `vite.config.js` — Vite's defaults are used as-is.
+`vite.config.js` at the repo root is four lines and does exactly two things:
+point `envDir` at the repo root so every Vite root finds the same `.env`, and
+set `envPrefix` to `TARGET_` so only `TARGET_URL` is injected into the bundle.
+Everything else is Vite's default.
+
+It is not auto-discovered — Vite looks for a config in its *root*, which is a
+folder under `frontend/` — so the npm scripts pass `--config vite.config.js`.
 
 ## The backend
 
@@ -142,21 +151,26 @@ the browser calls the CMS host directly and skips the proxy entirely. That means
 the map fills with real data with no backend running at all; the backend is only
 needed to submit a report.
 
-Point `TARGET_URL` at the same CMS host the frontend reads from — the value at
-the top of your `main.js`. If the two disagree you will read from one
-instance and write to another, which fails in a confusing way.
+`TARGET_URL` is the host the proxy forwards to, and it is the same variable the
+frontend reads for its public GET — one value, both sides, so a read/write host
+mismatch is not a thing that can happen.
 
-It is configured entirely through `backend/.env`:
+It is configured entirely through the repo-root `.env`:
 
 | Variable            | Default         | Purpose                                                  |
 | ------------------- | --------------- | -------------------------------------------------------- |
 | `PORT`              | `8080`          | Port the proxy listens on                                |
-| `TARGET_URL`        | —               | **Required.** Upstream to forward to                     |
+| `TARGET_URL`        | —               | **Required.** The CMS host — read by both sides          |
 | `AUTH_HEADER_NAME`  | `Authorization` | Name of the header to inject                             |
 | `AUTH_HEADER_VALUE` | —               | **Required.** Its value, e.g. `Bearer <token>`           |
 
 The server exits with an error message if `TARGET_URL` or `AUTH_HEADER_VALUE` is
-missing.
+missing. The frontend is softer about it: with no `.env` at all it falls back to
+the literal host in `main.js`, so every step folder still runs.
+
+`AUTH_HEADER_VALUE` sits in the same file the frontend reads from and still
+never reaches the browser — `envPrefix` in `vite.config.js` only lets `TARGET_`
+through. That is worth showing attendees in step 03.
 
 Verify it from a terminal — the path is whatever the upstream API expects:
 
@@ -166,8 +180,8 @@ curl -i http://localhost:8080/api/...
 
 The proxy also sets `Access-Control-Allow-Origin: *` on every response,
 replacing whatever the upstream sent. That is what lets the frontend on port
-5173 call it directly with `fetch`, and why the repo needs no `vite.config.js`
-dev proxy.
+5173 call it directly with `fetch`, so there is no dev proxy in
+`vite.config.js` — it handles env loading and nothing else.
 
 `OPTIONS` is the one method the proxy answers itself, with a `204` and the
 `Allow-Methods` / `Allow-Headers` a preflight needs. Everything else is

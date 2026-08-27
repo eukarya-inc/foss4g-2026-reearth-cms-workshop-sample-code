@@ -85,15 +85,17 @@ folders, and needs none — it is read, not written, and steps 03 and 04 touch i
 | Backend runtime       | Express + `http-proxy-middleware` + `dotenv`                                                                                   | A hand-rolled proxy is more code to explain than the middleware call it replaces                                                                                               |
 | Backend restart       | `node --watch`                                                                                                                 | Built in; no nodemon. Stable from Node 22, hence the version bump                                                                                                              |
 | Backend port          | `8080`, overridable via `PORT`                                                                                                 | Clear of Vite's 5173                                                                                                                                                           |
-| Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's                                              | Keeps the "no `vite.config.js`" decision — no dev proxy needed                                                                                                                 |
+| Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's                                              | No dev proxy needed, so `vite.config.js` stays limited to env loading                                                                                                          |
 | Read path             | Public API called straight from the browser; only writes go through the injector                                               | Nothing to hide on a read, so a proxy hop would only obscure the lesson — and the map then works with no backend and no token                                                  |
 | Running both          | Two terminals (`dev:web`, `dev:api`)                                                                                           | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency                                                                          |
 | Language              | Plain JavaScript                                                                                                               | Keeps the workshop about the content, not the toolchain                                                                                                                        |
 | Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                                                        | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too                                    |
 | Map library           | Leaflet 1.9 via the unpkg CDN                                                                                                  | Smaller and simpler to read aloud than MapLibre; keeps `package.json` free of frontend runtime deps                                                                            |
-| Config                | No `vite.config.js`                                                                                                            | Nothing to explain                                                                                                                                                             |
+| Config                | A four-line `vite.config.js`: `envDir` at the repo root, `envPrefix: "TARGET_"`                                                | Reverses the earlier "no config file" rule. One `.env` now feeds both sides, so the read host cannot drift from the write host; `envPrefix` is what keeps the token out of the bundle |
+| Env file              | One `.env` at the repo root, read by the proxy and by Vite                                                                     | `TARGET_URL` set once. The previous split — `backend/.env` plus a literal in each `main.js` — had already drifted, with `workspace/main.js` on a different CMS instance         |
+| Production build      | None; `build:web` and `preview:web` dropped                                                                                    | Nothing in a 3-hour workshop ships a build, and every script kept is a script to explain                                                                                       |
 | Given code            | Everything an attendee never edits lives in `frontend/common/` and is imported, not copied                                     | One source of truth for the markup, the rendering, the taxonomy and the demo data; a fix lands once instead of once per folder                                                 |
-| Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                                        | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step, no symlink and still no `vite.config.js`                                      |
+| Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                                        | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step and no symlink                                                                |
 | Step code             | One `main.js` per folder, no `src/`, each step building on the one before                                                      | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room                                         |
 | Typed vs given        | Attendees write a CMS client and nothing else. The map, the state, the rendering and the wiring are given, behind `startApp()` | ~60 code lines across the session, every one of them about the CMS. Leaflet and DOM plumbing teach nothing the workshop is for                                                 |
 | Read path shape       | `normalizeItem` is written against the response the API actually returns, not against several possible shapes                  | The tolerant version was guesswork from before anyone called the endpoint, and it hid a bug: it read `createdAt`, but the CMS sends `$createdAt`, so every date rendered blank |
@@ -140,8 +142,17 @@ pre-built in `common/map.js`.
       project, photos included.
 - [ ] Does `toApiFields()` match the model on the **write** side? The read is
       confirmed; the write has still never been exercised against a live model.
-- [x] Which CMS instance? — production, `api.cms.reearth.io`, matching
-      `backend/env.example`. Every step and the textbook chapter now agree.
-- [x] Does Vite serve `frontend/common/` from a step folder with no
-      `vite.config.js`? — yes, ES-module imports and `layout.html?raw` alike, in
-      dev via `/@fs` and inlined at build time.
+- [x] Which CMS instance? — production, `api.cms.reearth.io`. It is now the
+      value of `TARGET_URL` in the repo-root `.env`, read by both sides, plus an
+      identical fallback literal in each `main.js` so the steps still run with no
+      setup. `workspace/main.js` had drifted to `api.cms.test.reearth.dev`; that
+      class of drift is now structurally impossible.
+- [x] Does Vite serve `frontend/common/` from a step folder? — yes, ES-module
+      imports and `layout.html?raw` alike, in dev via `/@fs`. Nothing in
+      `vite.config.js` is needed for it.
+- [x] Does one `.env` reach both sides? — yes. `envDir` must be absolute
+      (`import.meta.dirname`), since Vite resolves it against the Vite root and
+      the roots sit at different depths. The config is not auto-discovered
+      either, so every Vite script passes `--config vite.config.js`. Verified at
+      both depths, and a build with `AUTH_HEADER_VALUE` set confirms the token
+      does not reach the bundle.

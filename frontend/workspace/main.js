@@ -26,7 +26,9 @@ const WORKSPACE_ALIAS = "your-workspace-alias";
 const PROJECT_ALIAS = "your-project-alias";
 const MODEL_KEY = "hazard_reports";
 
-const CMS_BASE_URL = "https://api.cms.test.reearth.dev";
+// The CMS host. `TARGET_URL` in the repo-root .env overrides it, so the host
+// you read from is always the host the proxy writes to.
+const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
 
 // ---------------------------------------------------------------------------
 // Talking to the CMS
