@@ -4,6 +4,7 @@ Four steps. By the end you will have a map of Hiroshima that reads citizen hazar
 
 > The identifiers below point at the **shared workshop project**, so every step runs
 against real data out of the box. Swap in your own once you have built your project.
+>
 
 ## What you write, and what is given
 
@@ -47,8 +48,6 @@ You need Node.js 22 or newer, and the repository:
 git clone https://github.com/eukarya-inc/foss4g-2026-reearth-cms-workshop-sample-code
 cd foss4g-2026-reearth-cms-workshop-sample-code
 ```
-
----
 
 # Step 01 — Connecting to your project
 
@@ -163,8 +162,6 @@ Three things to find, because step 02 is written against exactly these:
 | `HTTP 401`              | You used the private endpoint — check the `/p/` is in `PUBLIC_ITEMS_URL`          |
 | `Failed to fetch`       | No network, or the host in `TARGET_URL` is wrong                                  |
 | `[]`                    | The read worked, but the project has no published items in it                     |
-
----
 
 # Step 02 — Turning the response into reports
 
@@ -294,7 +291,6 @@ This is the step where it all arrives at once — the list, the filters, the sta
 - The **List** tab shows a card per report; the stats row shows real counts.
 - The filter chips narrow both the list and the markers.
 - Clicking a marker opens the detail panel; clicking a list card opens it *and* pans the map.
-- Turn off your Wi-Fi and hit refresh: **Demo mode**, seven demo reports, still working.
 
 ## If it does not work
 
@@ -306,8 +302,6 @@ This is the step where it all arrives at once — the list, the filters, the sta
 | Markers in the sea off Africa          | Latitude and longitude swapped — coordinates near `[0, 0]`                                    |
 | Titles are blank                       | Your title field is not keyed `title`                                                         |
 | **Demo mode** when you expect **Live** | The read threw — the console warning says why                                                 |
-
----
 
 # Step 03 — The token, and the proxy that holds it
 
@@ -323,25 +317,49 @@ So the token goes on a small server on your own machine, and the browser asks th
 
 ## 3.2 Set it up
 
+Execute the command below in your terminal: **(navigate to the root directory of the project folder first)**
+
 ```bash
 cp env.example .env
 ```
+
+Or you can create a new file `.env` and copy-paste all content from `env.example` into it.
 
 Open `.env` at the repo root and fill in one value:
 
 - `AUTH_HEADER_VALUE` — `Bearer`  followed by your integration token.
 
-`TARGET_URL` is already correct, and you only ever set it once: **the frontend reads the same variable**, so the host you read from and the host you write to cannot disagree. Change it and both sides move together.
+`TARGET_URL` is already correct, and you only ever set it once: **the frontend reads that same variable**. The host you read from and the host you write to cannot disagree, because there is only one of them.
+
+```diff
+PORT=8080
+TARGET_URL=https://api.cms.reearth.io
+AUTH_HEADER_NAME=Authorization
+- AUTH_HEADER_VALUE="Bearer your-token-here"
++ AUTH_HEADER_VALUE="Bearer my-powerful-token"
+```
+
+<aside>
+💡
+
+Keep a whitespace between `Bearer` and your token: `Bearer your-token-here`
+
+</aside>
 
 `.env` is gitignored, so your token is never committed.
 
 ### Wait — the token is in a file the frontend reads?
 
-Yes, and it still cannot leak. `vite.config.js` sets `envPrefix: "TARGET_"`, so only variables starting with `TARGET_` are ever put into the browser bundle. `AUTH_HEADER_VALUE` does not match, so it is simply not there.
+Good catch, and it is worth stopping on, because it looks like it contradicts everything §3.1 just said.
 
-Prove it to yourself rather than taking it on trust — with the dev server running, open <http://localhost:5173/main.js> and search the page. You will find the CMS host. You will not find your token.
+Both sides read this one file: the proxy takes `AUTH_HEADER_VALUE` and `TARGET_URL`, the frontend takes `TARGET_URL` for its public read. But `vite.config.js` sets `envPrefix: "TARGET_"`, and that is a whitelist — **only** variables whose names start with `TARGET_` are ever put into the browser bundle. `AUTH_HEADER_VALUE` does not match, so it is not excluded or masked or scrubbed. It is simply never there.
 
-That is the same lesson as 3.1 from the other direction: the browser gets what you deliberately give it, and nothing else.
+Do not take that on trust. With the dev server running, open <http://localhost:5173/main.js> and search the page:
+
+- `api.cms.reearth.io` — there, because you asked for it.
+- your token — not there, and no amount of digging in the browser will find it.
+
+That is §3.1 from the other direction. The browser gets exactly what you deliberately hand it, and nothing else in the file comes along for the ride.
 
 **In a second terminal**, leaving the first one running:
 
@@ -354,9 +372,10 @@ npm run dev:api   # http://localhost:8080
 Open `backend/server.js`. It is under 60 lines and there is no trick in it. The part that matters:
 
 ```jsx
-        proxyReq: (req) => {
-            req.setHeader(AUTH_HEADER_NAME, AUTH_HEADER_VALUE);
-        },
+// line 42
+proxyReq: (req) => {
+    req.setHeader(AUTH_HEADER_NAME, AUTH_HEADER_VALUE);
+},
 ```
 
 That is the whole idea. Every request the browser sends to `localhost:8080` is forwarded to the CMS with the auth header attached on the way out. The server has no routes of its own, does not know what a hazard report is, and rewrites nothing. **It adds one header.**
@@ -459,8 +478,9 @@ The round trip, end to end:
 1. Click somewhere on the map — a pulsing blue circle appears, and the panel shows the coordinates.
 2. Pick a category and type a title. **Submit** enables only when title, category and location are all set.
 3. Submit. A spinner, then *Report sent to the CMS.*
-4. The form clears, the list re-loads, and **your new report is on the map** — it came back from the CMS, it was not faked locally.
-5. Open your project in the CMS and find the item, with `status: pending` and the coordinates you clicked.
+4. Back to CMS, heading to content list page and publish the item we just created.
+5. Back to our app and click the reload button on the map. **Your new report is on the map** — it came back from the CMS, it was not faked locally.
+6. Open your project in the CMS and find the item, with `status: pending` and the coordinates you clicked.
 
 That last check is the one that matters. The report is not just on your screen; it is in the CMS, and it got there without the browser ever holding the token.
 
@@ -474,8 +494,6 @@ That last check is the one that matters. The report is not just on your screen; 
 | `400` about fields                              | A key or type in `toApiFields` does not match your model                    |
 | The pin lands in the wrong hemisphere           | `coordinates` is `[longitude, latitude]`, not the other way round           |
 | Submit stays greyed out                         | One of the three requirements is missing — most often the map click         |
-
----
 
 # Bonus — Photos
 
@@ -527,8 +545,6 @@ The finished version is in `frontend/steps/final`:
 ```bash
 npm run step:web -- frontend/steps/final
 ```
-
----
 
 # Appendix
 

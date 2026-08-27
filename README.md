@@ -72,7 +72,6 @@ Other commands:
 | `npm run dev:web`                           | Dev server for `frontend/workspace/`                                      |
 | `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit                   |
 | `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                                  |
-| `npm run step:api -- <file>`                | `node --watch` on any server entry point                                   |
 
 ## Structure
 
