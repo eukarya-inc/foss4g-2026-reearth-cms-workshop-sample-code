@@ -11,26 +11,27 @@ import { DEMO_REPORTS } from "../../common/demo-reports.js";
 // Your project
 // ---------------------------------------------------------------------------
 
-// The aliases you gave the workspace and the project, and the key you gave the
-// model. None of this is a secret: the public API is public, and these end up
-// in the browser either way.
-const WORKSPACE_ALIAS = "demo-workspace";
-const PROJECT_ALIAS = "foss4g-workshop";
-const MODEL_KEY = "hazard_reports";
+// Where your project lives. Each of the three takes an id or an alias — a
+// personal workspace only has an id, a project usually has an alias. None of
+// this is a secret: the public API is public, and these end up in the browser
+// either way.
+const WORKSPACE_ID_OR_ALIAS = "demo-workspace";
+const PROJECT_ID_OR_ALIAS = "foss4g-workshop";
+const MODEL_ID_OR_KEY = "hazard_reports";
 
 // The CMS host. `TARGET_URL` in the repo-root .env overrides it, so the host
 // you read from is always the host the proxy writes to.
 const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
 
-const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
+const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ID_OR_ALIAS}/${PROJECT_ID_OR_ALIAS}/${MODEL_ID_OR_KEY}`;
 
 // Write path — the proxy on your machine, which attaches the token on the way
 // out. Same three identifiers, and note there is no `/p/` this time: this is
 // the authenticated API.
 const PROXY_BASE_URL = "http://localhost:8080";
 
-const ASSETS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/assets`;
-const ITEMS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/models/${MODEL_KEY}/items`;
+const ASSETS_PATH = `/api/${WORKSPACE_ID_OR_ALIAS}/projects/${PROJECT_ID_OR_ALIAS}/assets`;
+const ITEMS_PATH = `/api/${WORKSPACE_ID_OR_ALIAS}/projects/${PROJECT_ID_OR_ALIAS}/models/${MODEL_ID_OR_KEY}/items`;
 
 // ---------------------------------------------------------------------------
 // Talking to the CMS
@@ -87,25 +88,24 @@ const uploadAsset = async (file) => {
 // built in the CMS — if yours differs, this is the only place to change.
 const toApiFields = (draft, assetIds) => {
   const fields = [
-    { key: "title", type: "text", value: draft.title },
-    { key: "category", type: "select", value: draft.category },
-    { key: "description", type: "textArea", value: draft.description },
+    { key: "title", value: draft.title },
+    { key: "category", value: draft.category },
+    { key: "description", value: draft.description },
     {
       key: "location",
-      type: "geometryObject",
       // GeoJSON order is [longitude, latitude] — the opposite of Leaflet's.
       value: JSON.stringify({
         type: "Point",
         coordinates: [draft.longitude, draft.latitude],
       }),
     },
-    { key: "status", type: "select", value: "pending" },
+    { key: "status", value: "pending" },
   ];
 
   // An empty asset array is rejected, so only send the field when there is
   // something in it.
   if (assetIds.length > 0) {
-    fields.push({ key: "photos", type: "asset", value: assetIds });
+    fields.push({ key: "photos", value: assetIds });
   }
 
   return fields;

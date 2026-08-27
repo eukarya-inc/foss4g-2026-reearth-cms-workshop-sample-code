@@ -133,7 +133,7 @@ with `fetch`. The backend is an auth injector: it forwards every request to the
 CMS API and attaches the token, so never send credentials from the browser.
 
 **Reads go straight to the CMS.** The public API
-(`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`) needs no auth, so routing
+(`/api/p/<workspace>/<project>/<model>`) needs no auth, so routing
 it through the proxy would buy nothing and hide the point. The configuration
 block at the top of `main.js` names the two origins apart — `TARGET_URL` for the
 public read, `PROXY_BASE_URL` for the token-bearing writes — and `request()`

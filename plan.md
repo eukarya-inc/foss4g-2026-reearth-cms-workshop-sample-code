@@ -32,10 +32,11 @@ The backend keeps its single role: an auth injector. The frontend calls the
 token-bearing CMS endpoints directly through it, so the integration token never
 reaches the browser. The read is not one of them — the public API needs no auth,
 so the browser calls the CMS itself and the map works with no backend running.
-The workspace and project aliases and the model key do sit in the frontend —
-they are not secrets, and saying so is part of the workshop. Both APIs take them,
-so the top of `main.js` carries one set of identifiers rather than one per
-path.
+The three CMS identifiers do sit in the frontend — they are not secrets, and
+saying so is part of the workshop. Both APIs take an id or an alias for each of
+them, so the top of `main.js` carries one set rather than one per path, and the
+constants are named `*_ID_OR_ALIAS` / `*_ID_OR_KEY` to say so. A personal
+workspace has no alias at all, which is what forced the point.
 
 ## Steps
 
@@ -76,29 +77,29 @@ folders, and needs none — it is read, not written, and steps 03 and 04 touch i
 
 ## Setup decisions
 
-| Decision              | Choice                                                                                                                         | Why                                                                                                                                                                            |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Package manager       | npm                                                                                                                            | Ships with Node; nothing extra for attendees to install                                                                                                                        |
-| Dependency layout     | One root `package.json` for both sides, Vite invoked with a root argument (`vite frontend/workspace`)                          | Single `npm install`, one lockfile, no nested `node_modules`                                                                                                                   |
-| Repo layout           | `frontend/` with `workspace/` + `steps/`; `backend/` a single server file                                                      | Neither side is the implicit default; the backend is small enough not to need steps yet                                                                                        |
-| Build tool (frontend) | Vite (dev dependency only)                                                                                                     | Instant hot reload, ES modules, no config file needed                                                                                                                          |
-| Backend runtime       | Express + `http-proxy-middleware` + `dotenv`                                                                                   | A hand-rolled proxy is more code to explain than the middleware call it replaces                                                                                               |
-| Backend restart       | `node --watch`                                                                                                                 | Built in; no nodemon. Stable from Node 22, hence the version bump                                                                                                              |
-| Backend port          | `8080`, overridable via `PORT`                                                                                                 | Clear of Vite's 5173                                                                                                                                                           |
-| Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's                                              | No dev proxy needed, so `vite.config.js` stays limited to env loading                                                                                                          |
-| Read path             | Public API called straight from the browser; only writes go through the injector                                               | Nothing to hide on a read, so a proxy hop would only obscure the lesson — and the map then works with no backend and no token                                                  |
-| Running both          | Two terminals (`dev:web`, `dev:api`)                                                                                           | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency                                                                          |
-| Language              | Plain JavaScript                                                                                                               | Keeps the workshop about the content, not the toolchain                                                                                                                        |
-| Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                                                        | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too                                    |
-| Map library           | Leaflet 1.9 via the unpkg CDN                                                                                                  | Smaller and simpler to read aloud than MapLibre; keeps `package.json` free of frontend runtime deps                                                                            |
+| Decision              | Choice                                                                                                                         | Why                                                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Package manager       | npm                                                                                                                            | Ships with Node; nothing extra for attendees to install                                                                                                                               |
+| Dependency layout     | One root `package.json` for both sides, Vite invoked with a root argument (`vite frontend/workspace`)                          | Single `npm install`, one lockfile, no nested `node_modules`                                                                                                                          |
+| Repo layout           | `frontend/` with `workspace/` + `steps/`; `backend/` a single server file                                                      | Neither side is the implicit default; the backend is small enough not to need steps yet                                                                                               |
+| Build tool (frontend) | Vite (dev dependency only)                                                                                                     | Instant hot reload, ES modules, no config file needed                                                                                                                                 |
+| Backend runtime       | Express + `http-proxy-middleware` + `dotenv`                                                                                   | A hand-rolled proxy is more code to explain than the middleware call it replaces                                                                                                      |
+| Backend restart       | `node --watch`                                                                                                                 | Built in; no nodemon. Stable from Node 22, hence the version bump                                                                                                                     |
+| Backend port          | `8080`, overridable via `PORT`                                                                                                 | Clear of Vite's 5173                                                                                                                                                                  |
+| Cross-origin          | `Access-Control-Allow-Origin: *` injected by the proxy, overriding the upstream's                                              | No dev proxy needed, so `vite.config.js` stays limited to env loading                                                                                                                 |
+| Read path             | Public API called straight from the browser; only writes go through the injector                                               | Nothing to hide on a read, so a proxy hop would only obscure the lesson — and the map then works with no backend and no token                                                         |
+| Running both          | Two terminals (`dev:web`, `dev:api`)                                                                                           | A single `&`-chained script runs sequentially on Windows; doing it portably needs an extra dependency                                                                                 |
+| Language              | Plain JavaScript                                                                                                               | Keeps the workshop about the content, not the toolchain                                                                                                                               |
+| Styling               | Tailwind via the browser CDN (`@tailwindcss/browser@4`)                                                                        | No build step, no config file, no runtime dependency — and no CSS file, since its DOM observer styles the runtime-built Leaflet markers too                                           |
+| Map library           | Leaflet 1.9 via the unpkg CDN                                                                                                  | Smaller and simpler to read aloud than MapLibre; keeps `package.json` free of frontend runtime deps                                                                                   |
 | Config                | A four-line `vite.config.js`: `envDir` at the repo root, `envPrefix: "TARGET_"`                                                | Reverses the earlier "no config file" rule. One `.env` now feeds both sides, so the read host cannot drift from the write host; `envPrefix` is what keeps the token out of the bundle |
-| Env file              | One `.env` at the repo root, read by the proxy and by Vite                                                                     | `TARGET_URL` set once. The previous split — `backend/.env` plus a literal in each `main.js` — had already drifted, with `workspace/main.js` on a different CMS instance         |
-| Production build      | None; `build:web` and `preview:web` dropped                                                                                    | Nothing in a 3-hour workshop ships a build, and every script kept is a script to explain                                                                                       |
-| Given code            | Everything an attendee never edits lives in `frontend/common/` and is imported, not copied                                     | One source of truth for the markup, the rendering, the taxonomy and the demo data; a fix lands once instead of once per folder                                                 |
-| Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                                        | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step and no symlink                                                                |
-| Step code             | One `main.js` per folder, no `src/`, each step building on the one before                                                      | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room                                         |
-| Typed vs given        | Attendees write a CMS client and nothing else. The map, the state, the rendering and the wiring are given, behind `startApp()` | ~60 code lines across the session, every one of them about the CMS. Leaflet and DOM plumbing teach nothing the workshop is for                                                 |
-| Read path shape       | `normalizeItem` is written against the response the API actually returns, not against several possible shapes                  | The tolerant version was guesswork from before anyone called the endpoint, and it hid a bug: it read `createdAt`, but the CMS sends `$createdAt`, so every date rendered blank |
+| Env file              | One `.env` at the repo root, read by the proxy and by Vite                                                                     | `TARGET_URL` set once. The previous split — `backend/.env` plus a literal in each `main.js` — had already drifted, with `workspace/main.js` on a different CMS instance               |
+| Production build      | None; `build:web` and `preview:web` dropped                                                                                    | Nothing in a 3-hour workshop ships a build, and every script kept is a script to explain                                                                                              |
+| Given code            | Everything an attendee never edits lives in `frontend/common/` and is imported, not copied                                     | One source of truth for the markup, the rendering, the taxonomy and the demo data; a fix lands once instead of once per folder                                                        |
+| Shared markup         | `frontend/common/layout.html`, injected by `main.js` with Vite's `?raw`                                                        | Drops `index.html` from 229 duplicated lines per folder to a ~20-line shell, with no build step and no symlink                                                                        |
+| Step code             | One `main.js` per folder, no `src/`, each step building on the one before                                                      | An attendee grows a single file and never moves code between files mid-session — the thing most likely to lose a JavaScript-light room                                                |
+| Typed vs given        | Attendees write a CMS client and nothing else. The map, the state, the rendering and the wiring are given, behind `startApp()` | ~60 code lines across the session, every one of them about the CMS. Leaflet and DOM plumbing teach nothing the workshop is for                                                        |
+| Read path shape       | `normalizeItem` is written against the response the API actually returns, not against several possible shapes                  | The tolerant version was guesswork from before anyone called the endpoint, and it hid a bug: it read `createdAt`, but the CMS sends `$createdAt`, so every date rendered blank        |
 
 Deliberately out of scope: TypeScript, linters/formatters, tests, CI, frameworks.
 
@@ -118,17 +119,26 @@ pre-built in `common/map.js`.
 - [x] Do we need to answer CORS preflights locally? — yes. The item POST sends
       `Content-Type: application/json`, so `backend/server.js` now answers
       `OPTIONS` itself instead of forwarding it upstream.
-- [ ] Does the CMS public API send `Access-Control-Allow-Origin` on the item
-      list? The proxy used to force it in, so the direct read has never been
-      exercised from a browser. If it does not, reads have to go back through the
-      injector — a `vite.config.js` dev proxy is ruled out.
+- [x] Does the CMS public API send `Access-Control-Allow-Origin` on the item
+      list? — yes, confirmed from a browser. The direct read works cross-origin,
+      so the injector is needed for writes only and the map fills with real data
+      with no backend running. This was the assumption the whole "reads go
+      straight to the CMS" design rested on.
 - [x] How many steps, and how long is each? — see *Steps*. Four, plus a bonus.
-- [ ] Which Re:Earth CMS project do attendees use? Each builds their own by
-      following the textbook; a presenter-owned Hiroshima project is still needed
-      as the fallback for anyone whose setup breaks, and its aliases have to be
-      given out somewhere. `frontend/steps/final` still points at
-      `aaaaa-yhwlvy` / `workshop`, and steps 01–04 ship placeholder aliases, so
-      everything runs on demo data until this lands.
+- [ ] Which Re:Earth CMS project do attendees use? Half settled: each builds
+      their own project in their **personal workspace**, which has no alias, only
+      an id — hence `WORKSPACE_ID_OR_ALIAS` and its two siblings, since both APIs
+      take either form for all three. Still open: a presenter-owned Hiroshima
+      project as the fallback for anyone whose setup breaks, and where its
+      identifiers get handed out. Every `steps/` folder ships `demo-workspace` /
+      `foss4g-workshop` and runs on live data; only `workspace/main.js` carries
+      placeholders, which is deliberate.
+- [x] Does a personal-workspace **id** actually work end to end? — yes, verified
+      against a real personal workspace: the public read returns items and the
+      authenticated write creates one, with the id standing in for an alias on
+      both paths. This is what the `*_ID_OR_ALIAS` naming was for, and it is the
+      one thing the rename's own checks could not prove — every `steps/` folder
+      still holds an alias.
 - [x] Does the read path match a live project? — yes, verified against
       `demo-workspace` / `foss4g-workshop`. The public API returns
       `{ results: [...], totalCount }`, each field as a plain top-level property,
@@ -140,8 +150,10 @@ pre-built in `common/map.js`.
       when an item has none. `normalizeItem` maps them to the plain URLs
       `common/ui.js` renders. The read path is now fully confirmed against a live
       project, photos included.
-- [ ] Does `toApiFields()` match the model on the **write** side? The read is
-      confirmed; the write has still never been exercised against a live model.
+- [x] Does `toApiFields()` match the model on the **write** side? — yes, a
+      report has been POSTed into a live model successfully. Both directions are
+      now verified against real data: `normalizeItem` on the way in,
+      `toApiFields` on the way out.
 - [x] Which CMS instance? — production, `api.cms.reearth.io`. It is now the
       value of `TARGET_URL` in the repo-root `.env`, read by both sides, plus an
       identical fallback literal in each `main.js` so the steps still run with no

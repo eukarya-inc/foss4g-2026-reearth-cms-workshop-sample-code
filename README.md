@@ -117,9 +117,10 @@ map, which is step 04 plus photo upload:
 npm run step:web -- frontend/steps/final
 ```
 
-To point any folder at a real CMS project, fill in the workspace and project
-aliases and the model key at the **top of its `main.js`** — the read path and
-the write path share that one set of identifiers. The workshop textbook walks
+To point any folder at a real CMS project, fill in the three identifiers at the
+**top of its `main.js`** — the read path and the write path share that one set.
+Each takes an id or an alias, which is what their names say; a personal
+workspace has only an id. The workshop textbook walks
 through creating the project and finding them. Until you do — or whenever the CMS
 is unreachable — the app falls back to demo data and says so in the header.
 
@@ -145,7 +146,7 @@ The point is to keep the API token on the server: the frontend calls
 
 Only the calls that actually need the token go through it — the asset upload and
 the item POST. The read hits the CMS **public API**
-(`/api/p/<workspaceAlias>/<projectAlias>/<modelKey>`), which needs no auth, so
+(`/api/p/<workspace>/<project>/<model>`), which needs no auth, so
 the browser calls the CMS host directly and skips the proxy entirely. That means
 the map fills with real data with no backend running at all; the backend is only
 needed to submit a report.

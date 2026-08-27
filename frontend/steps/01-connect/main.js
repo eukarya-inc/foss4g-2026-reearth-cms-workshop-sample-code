@@ -16,13 +16,14 @@ import { showRaw } from "../../common/app.js";
 // Your project
 // ---------------------------------------------------------------------------
 
-// The aliases you gave the workspace and the project, and the key you gave the
-// model. None of this is a secret: the public API is public, and these end up
-// in the browser either way. The token is the secret, and it turns up in step
-// 03 — on the server, never here.
-const WORKSPACE_ALIAS = "demo-workspace";
-const PROJECT_ALIAS = "foss4g-workshop";
-const MODEL_KEY = "hazard_reports";
+// Where your project lives. Each of the three takes an id or an alias — a
+// personal workspace only has an id, a project usually has an alias. None of
+// this is a secret: the public API is public, and these end up in the browser
+// either way. The token is the secret, and it turns up in step 03 — on the
+// server, never here.
+const WORKSPACE_ID_OR_ALIAS = "demo-workspace";
+const PROJECT_ID_OR_ALIAS = "foss4g-workshop";
+const MODEL_ID_OR_KEY = "hazard_reports";
 
 // The CMS host. `TARGET_URL` in the repo-root .env overrides it, so the host
 // you read from is always the host the proxy writes to.
@@ -31,7 +32,7 @@ const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
 // The public read endpoint. The `/p/` is what makes it the public one — it
 // needs no auth, so the browser can call the CMS directly and no backend has to
 // be running.
-const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
+const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ID_OR_ALIAS}/${PROJECT_ID_OR_ALIAS}/${MODEL_ID_OR_KEY}`;
 
 // ---------------------------------------------------------------------------
 // Talking to the CMS

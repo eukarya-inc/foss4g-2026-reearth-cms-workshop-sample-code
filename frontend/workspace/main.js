@@ -21,10 +21,11 @@ import { DEMO_REPORTS } from "../common/demo-reports.js";
 // Your project
 // ---------------------------------------------------------------------------
 
-// TODO (step 01): the aliases and model key from your own CMS project.
-const WORKSPACE_ALIAS = "your-workspace-alias";
-const PROJECT_ALIAS = "your-project-alias";
-const MODEL_KEY = "hazard_reports";
+// TODO (step 01): the ids or aliases from your own CMS project. A personal
+// workspace only has an id; a project usually has an alias.
+const WORKSPACE_ID_OR_ALIAS = "your-workspace-id-or-alias";
+const PROJECT_ID_OR_ALIAS = "your-project-id-or-alias";
+const MODEL_ID_OR_KEY = "hazard_reports";
 
 // The CMS host. `TARGET_URL` in the repo-root .env overrides it, so the host
 // you read from is always the host the proxy writes to.

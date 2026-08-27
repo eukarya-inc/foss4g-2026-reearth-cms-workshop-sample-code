@@ -4,7 +4,6 @@ Four steps. By the end you will have a map of Hiroshima that reads citizen hazar
 
 > The identifiers below point at the **shared workshop project**, so every step runs
 against real data out of the box. Swap in your own once you have built your project.
->
 
 ## What you write, and what is given
 
@@ -79,27 +78,37 @@ That is the shape of everything you are about to write. Replacing this one funct
 
 ## 1.2 Where your project is
 
-Those are the shared workshop project. Once you have built your own, replace `WORKSPACE_ALIAS` , `PROJECT_ALIAS` , `MODEL_KEY` aliases here:
+These identifiers point to the shared workshop project. Once you have built your own, replace all three here:
 
 ```jsx
-const WORKSPACE_ALIAS = "demo-workspace";
-const PROJECT_ALIAS = "foss4g-workshop";
-const MODEL_KEY = "hazard_reports";
+const WORKSPACE_ID_OR_ALIAS = "demo-workspace";
+const PROJECT_ID_OR_ALIAS = "foss4g-workshop";
+const MODEL_ID_OR_KEY = "hazard_reports";
 ```
+
+Each of the three takes **either** an id or an alias — which is why they are named the way they are. In practice:
+
+- **Workspace** — a personal workspace has no alias, only an id. Paste the id.
+- **Project** — you gave it an alias when you created it. Use that.
+- **Model** — you gave it a key. Use that.
+
+To find your personal workspace's id, open the workspace dropdown at the top left of the navbar and choose your workspace under **Personal Account**. The id is then in the URL — `https://cms.reearth.io/workspace/<workspace_id>`.
+
+If you would rather paste ids for all three, that works too. Nothing downstream cares which form you used.
 
 Just below those you will find `TARGET_URL` — the CMS host. Leave it alone; it already points at the right place, and you will meet it again in step 03 as the one setting the backend shares with you.
 
 Add below it:
 
 ```jsx
-const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ALIAS}/${PROJECT_ALIAS}/${MODEL_KEY}`;
+const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ID_OR_ALIAS}/${PROJECT_ID_OR_ALIAS}/${MODEL_ID_OR_KEY}`;
 ```
 
 The `/p/` is what makes this the **public** endpoint. It needs **no** authentication, which is why the browser can call the CMS directly and no backend has to be running yet.
 
 None of these three values is a secret. They end up in the browser either way, and the public API is public by design.
 
-In Re:Earth CMS, click any endpoint of Public API, we might get JSON with data in it.
+In Re:Earth CMS, click any Public API endpoint. You should see JSON with data in it.
 
 ## 1.3 Fetching
 
@@ -156,12 +165,12 @@ Three things to find, because step 02 is written against exactly these:
 
 ## If it does not work
 
-| Symptom                 | Cause                                                                             |
-| ----------------------- | --------------------------------------------------------------------------------- |
-| `HTTP 404` in the panel | Public API not enabled on the project, items not published, or a typo in an alias |
-| `HTTP 401`              | You used the private endpoint — check the `/p/` is in `PUBLIC_ITEMS_URL`          |
-| `Failed to fetch`       | No network, or the host in `TARGET_URL` is wrong                                  |
-| `[]`                    | The read worked, but the project has no published items in it                     |
+| Symptom                 | Cause                                                                                  |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| `HTTP 404` in the panel | Public API not enabled on the project, items not published, or a typo in an identifier |
+| `HTTP 401`              | You used the private endpoint — check the `/p/` is in `PUBLIC_ITEMS_URL`               |
+| `Failed to fetch`       | No network, or the host in `TARGET_URL` is wrong                                       |
+| `[]`                    | The read worked, but the project has no published items in it                          |
 
 # Step 02 — Turning the response into reports
 
@@ -200,7 +209,7 @@ const listReports = async () => {
 };
 ```
 
-Two changes. It now returns `{ reports, isLive }` — the shape `startApp` expects — and anything that goes wrong lands in the `catch`: a bad alias, no network, the CMS down. You get the demo reports and an honest **Demo mode** badge instead of a blank screen, and the console warning tells you what actually failed.
+Two changes. It now returns `{ reports, isLive }` — the shape `startApp` expects — and anything that goes wrong lands in the `catch`: a wrong identifier, no network, the CMS down. You get the demo reports and an honest **Demo mode** badge instead of a blank screen, and the console warning tells you what actually failed.
 
 That fallback is why the rest of this workshop still works if the venue Wi-Fi gives out.
 
@@ -327,7 +336,7 @@ Or you can create a new file `.env` and copy-paste all content from `env.example
 
 Open `.env` at the repo root and fill in one value:
 
-- `AUTH_HEADER_VALUE` — `Bearer`  followed by your integration token.
+- `AUTH_HEADER_VALUE` — `Bearer` followed by your integration token.
 
 `TARGET_URL` is already correct, and you only ever set it once: **the frontend reads that same variable**. The host you read from and the host you write to cannot disagree, because there is only one of them.
 
@@ -342,7 +351,7 @@ AUTH_HEADER_NAME=Authorization
 <aside>
 💡
 
-Keep a whitespace between `Bearer` and your token: `Bearer your-token-here`
+Keep a space between `Bearer` and your token: `Bearer your-token-here`
 
 </aside>
 
@@ -392,7 +401,7 @@ Two other details in that file are worth knowing, because they are the kind of t
 ```jsx
 const PROXY_BASE_URL = "http://localhost:8080";
 
-const ITEMS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/models/${MODEL_KEY}/items`;
+const ITEMS_PATH = `/api/${WORKSPACE_ID_OR_ALIAS}/projects/${PROJECT_ID_OR_ALIAS}/models/${MODEL_ID_OR_KEY}/items`;
 ```
 
 Same three identifiers, different endpoint — and note there is **no `/p/`** this time. This is the authenticated API, which is exactly why it has to go through the proxy.
@@ -409,7 +418,7 @@ Same three identifiers, different endpoint — and note there is **no `/p/`** th
 | ----------------------------------------- | --------------------------------------------------------------------------------- |
 | The proxy exits at once                   | `TARGET_URL` or `AUTH_HEADER_VALUE` missing from `.env`                           |
 | `EADDRINUSE`                              | Something else is on port 8080 — set `PORT` in `.env` and update `PROXY_BASE_URL` |
-| It reads `.env` but the token looks wrong | `AUTH_HEADER_VALUE` needs the `Bearer`  prefix, inside the quotes                 |
+| It reads `.env` but the token looks wrong | `AUTH_HEADER_VALUE` needs the `Bearer` prefix, inside the quotes                  |
 
 ---
 
@@ -478,8 +487,8 @@ The round trip, end to end:
 1. Click somewhere on the map — a pulsing blue circle appears, and the panel shows the coordinates.
 2. Pick a category and type a title. **Submit** enables only when title, category and location are all set.
 3. Submit. A spinner, then *Report sent to the CMS.*
-4. Back to CMS, heading to content list page and publish the item we just created.
-5. Back to our app and click the reload button on the map. **Your new report is on the map** — it came back from the CMS, it was not faked locally.
+4. Go back to the CMS, open the content list page, and publish the item you just created.
+5. Go back to the app and click the reload button on the map. **Your new report is on the map** — it came back from the CMS, it was not faked locally.
 6. Open your project in the CMS and find the item, with `status: pending` and the coordinates you clicked.
 
 That last check is the one that matters. The report is not just on your screen; it is in the CMS, and it got there without the browser ever holding the token.
@@ -502,7 +511,7 @@ If you finish early, add photo upload. The model already has a `photos` field of
 **Add an assets path** beside `ITEMS_PATH`:
 
 ```jsx
-const ASSETS_PATH = `/api/${WORKSPACE_ALIAS}/projects/${PROJECT_ALIAS}/assets`;
+const ASSETS_PATH = `/api/${WORKSPACE_ID_OR_ALIAS}/projects/${PROJECT_ID_OR_ALIAS}/assets`;
 ```
 
 **Add an upload function.** Note it sends `FormData`, not JSON, and it goes through the proxy because it needs the token too:
