@@ -1,9 +1,11 @@
 // Step 02 — turning the response into reports.
 //
-// The raw dump goes away. The CMS describes an item its own way; the app wants
-// a flat object with a title, a category and a latitude/longitude. Converting
-// between the two is this step, and it is the only place in the app that knows
-// what the CMS response looks like.
+// The console.log goes away. The CMS describes an item its own way; the app
+// wants a flat object with a title, a category and a latitude/longitude.
+// Converting between the two is this step, and it is the only place in the app
+// that knows what the CMS response looks like.
+//
+// This is also where the badge flips from "Demo mode" to "Live".
 
 import { startApp } from "../../common/app.js";
 import { DEMO_REPORTS } from "../../common/demo-reports.js";
@@ -30,6 +32,8 @@ const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ID_OR_ALIAS}/${PROJECT
 // Talking to the CMS
 // ---------------------------------------------------------------------------
 
+// Given — fetch does not throw on 404 or 500, so this is where a bad response
+// becomes an exception instead of data.
 const request = async (url, options) => {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -43,9 +47,7 @@ const request = async (url, options) => {
 // instead of a blank screen. The console warning says what actually failed.
 const listReports = async () => {
   try {
-    const data = await request(PUBLIC_ITEMS_URL, {
-      headers: { Accept: "application/json" },
-    });
+    const data = await request(PUBLIC_ITEMS_URL);
     return { reports: normalizeResponse(data), isLive: true };
   } catch (error) {
     console.warn("[cms] read failed, using demo data:", error.message);

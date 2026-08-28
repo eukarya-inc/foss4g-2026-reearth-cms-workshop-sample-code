@@ -27,22 +27,6 @@ import * as ui from "./ui.js";
 // runs as soon as the module is imported.
 document.getElementById("app").innerHTML = LAYOUT;
 
-// Put a value on screen so you can see what the CMS actually returned. Used by
-// the first step, before there is anything to draw a marker from.
-export const showRaw = (data) => {
-  // Calling this again replaces the previous dump rather than stacking a second
-  // one on top of it.
-  document.getElementById("raw-response")?.remove();
-
-  const pre = document.createElement("pre");
-  pre.id = "raw-response";
-  pre.className =
-    "fixed bottom-4 right-4 z-[3000] max-h-[60vh] w-[420px] overflow-auto " +
-    "rounded-xl bg-slate-900 p-4 text-[11px] leading-relaxed text-emerald-300 shadow-lg";
-  pre.textContent = JSON.stringify(data, null, 2);
-  document.body.append(pre);
-};
-
 export const startApp = ({ listReports, createItem, uploadAsset }) => {
   const state = {
     reports: [],

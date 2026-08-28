@@ -67,21 +67,21 @@ npm run step:web -- frontend/steps/01-connect
 
 Other commands:
 
-| Command                                     | What it does                                                              |
-| ------------------------------------------- | ------------------------------------------------------------------------- |
-| `npm run dev:web`                           | Dev server for `frontend/workspace/`                                      |
-| `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit                   |
-| `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                                  |
+| Command                                     | What it does                                             |
+| ------------------------------------------- | -------------------------------------------------------- |
+| `npm run dev:web`                           | Dev server for `frontend/workspace/`                     |
+| `npm run dev:api`                           | Proxy from `backend/server.js`, restarting on every edit |
+| `npm run step:web -- frontend/steps/<name>` | Dev server for a frontend reference step                 |
 
 ## Structure
 
-| Path                  | Purpose                                        |
-| --------------------- | ---------------------------------------------- |
-| `frontend/`           | Browser code — Vite, HTML, JavaScript.         |
-| `backend/server.js`   | The auth-injecting proxy.                      |
-| `env.example`         | Template for `.env`, read by both sides.       |
-| `vite.config.js`      | Env loading only — `envDir` and `envPrefix`.   |
-| `plan.md`             | Workshop outline and open questions.           |
+| Path                | Purpose                                                |
+| ------------------- | ------------------------------------------------------ |
+| `frontend/`         | Browser code — Vite, HTML, JavaScript.                 |
+| `backend/server.js` | The auth-injecting proxy.                              |
+| `env.example`       | Template for `.env`, read by both sides.               |
+| `vite.config.js`    | Env loading only — `envDir` and `envPrefix`.           |
+| `images/`           | Sample hazard photos, for the upload in `steps/final`. |
 
 The frontend has three folders:
 
@@ -116,6 +116,8 @@ map, which is step 04 plus photo upload:
 ```bash
 npm run step:web -- frontend/steps/final
 ```
+
+`images/` holds a few sample hazard photos to attach when you try that upload.
 
 To point any folder at a real CMS project, fill in the three identifiers at the
 **top of its `main.js`** — the read path and the write path share that one set.
@@ -157,12 +159,12 @@ mismatch is not a thing that can happen.
 
 It is configured entirely through the repo-root `.env`:
 
-| Variable            | Default         | Purpose                                                  |
-| ------------------- | --------------- | -------------------------------------------------------- |
-| `PORT`              | `8080`          | Port the proxy listens on                                |
-| `TARGET_URL`        | —               | **Required.** The CMS host — read by both sides          |
-| `AUTH_HEADER_NAME`  | `Authorization` | Name of the header to inject                             |
-| `AUTH_HEADER_VALUE` | —               | **Required.** Its value, e.g. `Bearer <token>`           |
+| Variable            | Default         | Purpose                                         |
+| ------------------- | --------------- | ----------------------------------------------- |
+| `PORT`              | `8080`          | Port the proxy listens on                       |
+| `TARGET_URL`        | —               | **Required.** The CMS host — read by both sides |
+| `AUTH_HEADER_NAME`  | `Authorization` | Name of the header to inject                    |
+| `AUTH_HEADER_VALUE` | —               | **Required.** Its value, e.g. `Bearer <token>`  |
 
 The server exits with an error message if `TARGET_URL` or `AUTH_HEADER_VALUE` is
 missing. The frontend is softer about it: with no `.env` at all it falls back to
@@ -191,19 +193,20 @@ accepts.
 
 ## The steps
 
-| Step | Where                       | Content                                            |
-| ---- | --------------------------- | -------------------------------------------------- |
-| 01   | `frontend/steps/01-connect`   | Install and run, then read the public API        |
-| 02   | `frontend/steps/02-normalize` | Turn the response into reports on the map        |
+| Step | Where                         | Content                                            |
+| ---- | ----------------------------- | -------------------------------------------------- |
+| 01   | `frontend/steps/01-connect`   | Install and run, then read the public API          |
+| 02   | `frontend/steps/02-normalize` | Turn the response into reports on the map          |
 | 03   | `frontend/steps/03-token`     | The token and the proxy — mostly reading, not code |
-| 04   | `frontend/steps/04-write`     | Send a new report back to the CMS                |
-| —    | `frontend/steps/final`        | The finished app, step 04 plus photo upload      |
+| 04   | `frontend/steps/04-write`     | Send a new report back to the CMS                  |
+| —    | `frontend/steps/final`        | The finished app, step 04 plus photo upload        |
 
 Building the CMS project itself — workspace, model, items, integration token —
 is covered by the workshop textbook, not by this repo. You need it done before
 step 01, which is the first step that reads from your project.
 
-Timings and the reasoning behind the split are in `plan.md`.
+The textbook also carries the session timings and the reasoning behind the
+split — this repo is the code only.
 
 ## Workshop links
 

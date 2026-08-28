@@ -31,17 +31,41 @@ const MODEL_ID_OR_KEY = "hazard_reports";
 // you read from is always the host the proxy writes to.
 const TARGET_URL = import.meta.env.TARGET_URL ?? "https://api.cms.reearth.io";
 
+// TODO (step 01): build the public read URL from the three identifiers above.
+
 // ---------------------------------------------------------------------------
 // Talking to the CMS
 // ---------------------------------------------------------------------------
 
-// TODO (step 01): build the public read URL and fetch it.
-// TODO (step 02): turn the response into the shape the app expects.
+// Given. fetch does not throw on 404 or 500 — it resolves with ok === false and
+// you get the error body parsed as if it were your data. Checking here means
+// every caller gets real data or an exception, and nothing in between.
+const request = async (url, options) => {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} ${response.statusText}`);
+  }
+  return response.json();
+};
+
+// The app calls this to get reports. Right now it returns the demo ones, which
+// is why the badge in the header says "Demo mode".
+//
+// The try/catch is given: anything that goes wrong — a bad alias, no network,
+// the CMS down — lands in the same catch, and you get the demo reports and an
+// honest badge instead of a blank screen.
+const listReports = async () => {
+  try {
+    // TODO (step 01): read the public URL and log what comes back.
+    // TODO (step 02): return { reports: normalizeResponse(data), isLive: true }.
+    return { reports: DEMO_REPORTS, isLive: false };
+  } catch (error) {
+    console.warn("[cms] read failed, using demo data:", error.message);
+    return { reports: DEMO_REPORTS, isLive: false };
+  }
+};
+
 // TODO (step 03): put your token on the server and start the proxy.
 // TODO (step 04): send a new report back to the CMS.
-
-// Until you write the read, the app runs on the demo reports — which is why the
-// badge in the header says "Demo mode".
-const listReports = async () => ({ reports: DEMO_REPORTS, isLive: false });
 
 startApp({ listReports });

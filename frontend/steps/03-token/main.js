@@ -46,6 +46,8 @@ const ITEMS_PATH = `/api/${WORKSPACE_ID_OR_ALIAS}/projects/${PROJECT_ID_OR_ALIAS
 // Talking to the CMS
 // ---------------------------------------------------------------------------
 
+// Given — fetch does not throw on 404 or 500, so this is where a bad response
+// becomes an exception instead of data.
 const request = async (url, options) => {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -59,9 +61,7 @@ const request = async (url, options) => {
 // instead of a blank screen. The console warning says what actually failed.
 const listReports = async () => {
   try {
-    const data = await request(PUBLIC_ITEMS_URL, {
-      headers: { Accept: "application/json" },
-    });
+    const data = await request(PUBLIC_ITEMS_URL);
     return { reports: normalizeResponse(data), isLive: true };
   } catch (error) {
     console.warn("[cms] read failed, using demo data:", error.message);

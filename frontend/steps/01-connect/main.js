@@ -8,9 +8,11 @@
 //
 // The map, the panel and every button are given — they live in
 // frontend/common. What you write, in this file, is the part that talks to the
-// CMS. This step gets the response on screen so you can see its shape.
+// CMS. This step gets the response into the console so you can see its shape;
+// the map is still on demo data until step 02 turns that response into reports.
 
-import { showRaw } from "../../common/app.js";
+import { startApp } from "../../common/app.js";
+import { DEMO_REPORTS } from "../../common/demo-reports.js";
 
 // ---------------------------------------------------------------------------
 // Your project
@@ -38,9 +40,9 @@ const PUBLIC_ITEMS_URL = `${TARGET_URL}/api/p/${WORKSPACE_ID_OR_ALIAS}/${PROJECT
 // Talking to the CMS
 // ---------------------------------------------------------------------------
 
-// fetch does not throw on 404 or 500 — it resolves with ok === false and you
-// get the error body parsed as if it were your data. Checking here means every
-// caller gets real data or an exception, and nothing in between.
+// Given. fetch does not throw on 404 or 500 — it resolves with ok === false and
+// you get the error body parsed as if it were your data. Checking here means
+// every caller gets real data or an exception, and nothing in between.
 const request = async (url, options) => {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -49,19 +51,25 @@ const request = async (url, options) => {
   return response.json();
 };
 
+// The try/catch is given: anything that goes wrong — a bad alias, no network,
+// the CMS down — lands in the same catch, and you get the demo reports and an
+// honest "Demo mode" badge instead of a blank screen.
 const listReports = async () => {
-  const data = await request(PUBLIC_ITEMS_URL, {
-    headers: { Accept: "application/json" },
-  });
-  return data;
+  try {
+    const data = await request(PUBLIC_ITEMS_URL);
+    // Open the devtools console and look at what came back: how the fields
+    // arrive, and how `location` is encoded. Step 02 turns this into something
+    // the map can draw, and this line goes away.
+    console.log("[cms] raw response:", data);
+    return { reports: DEMO_REPORTS, isLive: false };
+  } catch (error) {
+    console.warn("[cms] read failed, using demo data:", error.message);
+    return { reports: DEMO_REPORTS, isLive: false };
+  }
 };
-
-// Look at what comes back: how the fields arrive, and how `location` is
-// encoded. Step 02 turns this into something the map can draw.
-listReports()
-  .then(showRaw)
-  .catch((error) => showRaw({ error: error.message }));
 
 // TODO (step 02): turn the response into the shape the app expects.
 // TODO (step 03): put your token on the server and start the proxy.
 // TODO (step 04): send a new report back to the CMS.
+
+startApp({ listReports });
